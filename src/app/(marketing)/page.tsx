@@ -1,9 +1,12 @@
 import Link from "next/link"
 import { ArrowRight, Boxes, Building2, ClipboardCheck } from "lucide-react"
 
+import { getCurrentUser } from "@/lib/auth"
 import { buttonVariants } from "@/components/ui/button"
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const user = await getCurrentUser()
+
   return (
     <>
       <section className="border-b">
@@ -19,21 +22,33 @@ export default function LandingPage() {
             proveedores en una sola app. Sin Excel, sin adivinar mermas, sin
             perder dinero entre cocinas.
           </p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Link href="/login" className={buttonVariants({ size: "lg" })}>
-              Empezar prueba gratuita
+          {user ? (
+            <Link href="/dashboard" className={buttonVariants({ size: "lg" })}>
+              Ir al dashboard
               <ArrowRight className="size-4" />
             </Link>
-            <Link
-              href="/login"
-              className={buttonVariants({ size: "lg", variant: "outline" })}
-            >
-              Iniciar sesión
-            </Link>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            14 días gratis · Sin tarjeta · Cancela cuando quieras
-          </p>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Link
+                  href="/login"
+                  className={buttonVariants({ size: "lg" })}
+                >
+                  Empezar prueba gratuita
+                  <ArrowRight className="size-4" />
+                </Link>
+                <Link
+                  href="/login"
+                  className={buttonVariants({ size: "lg", variant: "outline" })}
+                >
+                  Iniciar sesión
+                </Link>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                14 días gratis · Sin tarjeta · Cancela cuando quieras
+              </p>
+            </>
+          )}
         </div>
       </section>
 

@@ -1,13 +1,16 @@
 import Link from "next/link"
-import { ChefHat } from "lucide-react"
+import { ChefHat, ArrowRight } from "lucide-react"
 
+import { getCurrentUser } from "@/lib/auth"
 import { buttonVariants } from "@/components/ui/button"
 
-export default function MarketingLayout({
+export default async function MarketingLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const user = await getCurrentUser()
+
   return (
     <div className="flex min-h-svh flex-col bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
@@ -20,15 +23,30 @@ export default function MarketingLayout({
             <span>Restoki</span>
           </Link>
           <nav className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className={buttonVariants({ variant: "ghost", size: "sm" })}
-            >
-              Iniciar sesión
-            </Link>
-            <Link href="/login" className={buttonVariants({ size: "sm" })}>
-              Empezar
-            </Link>
+            {user ? (
+              <Link
+                href="/dashboard"
+                className={buttonVariants({ size: "sm" })}
+              >
+                Ir al dashboard
+                <ArrowRight className="size-4" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className={buttonVariants({ variant: "ghost", size: "sm" })}
+                >
+                  Iniciar sesión
+                </Link>
+                <Link
+                  href="/login"
+                  className={buttonVariants({ size: "sm" })}
+                >
+                  Empezar
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>
