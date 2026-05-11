@@ -1,23 +1,24 @@
-import { ChefHat } from "lucide-react"
-
+import { requireOrg } from "@/lib/auth"
+import { getUserOrgs } from "@/lib/auth"
 import { AppHeader } from "@/components/app-header"
 import { AppSidebar } from "@/components/app-sidebar"
+import { OrgSwitcher } from "@/components/org-switcher"
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const { user, org } = await requireOrg()
+  const orgs = await getUserOrgs()
+
   return (
     <div className="flex min-h-svh flex-col bg-background">
-      <AppHeader />
+      <AppHeader userEmail={user.email ?? ""} />
       <div className="flex flex-1">
-        <aside className="hidden w-60 shrink-0 border-r bg-sidebar md:block">
-          <div className="flex h-12 items-center gap-2 border-b px-4">
-            <ChefHat className="size-4 text-primary" />
-            <span className="text-sm font-semibold text-sidebar-foreground">
-              Navegación
-            </span>
+        <aside className="hidden w-60 shrink-0 border-r bg-sidebar md:flex md:flex-col">
+          <div className="border-b p-3">
+            <OrgSwitcher current={org} orgs={orgs} />
           </div>
           <AppSidebar />
         </aside>

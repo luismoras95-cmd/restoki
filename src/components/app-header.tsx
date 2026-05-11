@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Menu, ChefHat, LogOut, User } from "lucide-react"
+import { Menu, ChefHat, LogOut, User as UserIcon } from "lucide-react"
 
+import { signOut } from "@/lib/actions/auth"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,7 +24,16 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-export function AppHeader() {
+interface AppHeaderProps {
+  userEmail: string
+}
+
+function initials(email: string): string {
+  const local = email.split("@")[0] ?? ""
+  return local.slice(0, 2).toUpperCase() || "?"
+}
+
+export function AppHeader({ userEmail }: AppHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
@@ -73,20 +83,32 @@ export function AppHeader() {
             }
           >
             <Avatar className="size-8">
-              <AvatarFallback>U</AvatarFallback>
+              <AvatarFallback>{initials(userEmail)}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel>Mi cuenta</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuLabel className="flex flex-col gap-0.5">
+              <span className="text-xs font-normal text-muted-foreground">
+                Conectado como
+              </span>
+              <span className="truncate text-sm font-medium">{userEmail}</span>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled>
-              <User className="size-4" />
-              Perfil
+              <UserIcon className="size-4" />
+              Mi perfil
             </DropdownMenuItem>
-            <DropdownMenuItem disabled>
-              <LogOut className="size-4" />
-              Cerrar sesión
-            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <form action={signOut}>
+              <DropdownMenuItem
+                render={
+                  <button type="submit" className="w-full">
+                    <LogOut className="size-4" />
+                    Cerrar sesión
+                  </button>
+                }
+              />
+            </form>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

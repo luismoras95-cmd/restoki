@@ -231,6 +231,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          address: string | null
           created_at: string | null
           id: string
           name: string
@@ -238,6 +239,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
           created_at?: string | null
           id?: string
           name: string
@@ -245,6 +247,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
           created_at?: string | null
           id?: string
           name?: string
@@ -622,6 +625,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_organization_with_owner: {
+        Args: { p_address?: string; p_name: string; p_rfc?: string }
+        Returns: string
+      }
       user_organizations: { Args: never; Returns: string[] }
     }
     Enums: {

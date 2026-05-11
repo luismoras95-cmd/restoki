@@ -3,6 +3,14 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import type { Database } from "@/types/database"
 
+const PUBLIC_PATHS = ["/", "/login"]
+const PUBLIC_PREFIXES = ["/auth/"]
+
+function isPublic(pathname: string): boolean {
+  if (PUBLIC_PATHS.includes(pathname)) return true
+  return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -27,9 +35,30 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Importante: getUser() refresca la sesión si está por expirar.
+  // Refresca la sesión y obtiene el usuario en una sola llamada.
   // No quitar este await ni meter código entre createServerClient y getUser.
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { pathname } = request.nextUrl
+
+  // Usuario no autenticado intentando entrar a una ruta privada → /login
+  if (!user && !isPublic(pathname)) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/login"
+    url.searchParams.set("next", pathname)
+    return NextResponse.redirect(url)
+  }
+
+  // Usuario autenticado en /login → /dashboard
+  // (el chequeo de "tiene org" lo hace el layout de (app), no el middleware,
+  // para evitar un query DB en cada request)
+  if (user && pathname === "/login") {
+    const url = request.nextUrl.clone()
+    url.pathname = "/dashboard"
+    return NextResponse.redirect(url)
+  }
 
   return supabaseResponse
 }
