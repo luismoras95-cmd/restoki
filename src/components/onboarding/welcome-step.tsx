@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { PartyPopper, ArrowRight } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface WelcomeStepProps {
   orgName: string
@@ -36,16 +37,13 @@ export function WelcomeStep({ orgName }: WelcomeStepProps) {
           <span>Registra la primera compra y verás stock al instante.</span>
         </li>
       </ul>
-      <Button
-        size="lg"
-        className="w-full"
-        render={
-          <Link href="/dashboard">
-            Ir al dashboard
-            <ArrowRight className="size-4" />
-          </Link>
-        }
-      />
+      <Link
+        href="/dashboard"
+        className={cn(buttonVariants({ size: "lg" }), "w-full")}
+      >
+        Ir al dashboard
+        <ArrowRight className="size-4" />
+      </Link>
     </div>
   )
 }

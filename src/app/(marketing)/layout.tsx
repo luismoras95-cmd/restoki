@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { ChefHat } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 
 export default function MarketingLayout({
   children,
@@ -20,12 +20,15 @@ export default function MarketingLayout({
             <span>Restoki</span>
           </Link>
           <nav className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              render={<Link href="/login">Iniciar sesión</Link>}
-            />
-            <Button size="sm" render={<Link href="/login">Empezar</Link>} />
+            <Link
+              href="/login"
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+            >
+              Iniciar sesión
+            </Link>
+            <Link href="/login" className={buttonVariants({ size: "sm" })}>
+              Empezar
+            </Link>
           </nav>
         </div>
       </header>

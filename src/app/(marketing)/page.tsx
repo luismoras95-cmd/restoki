@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { ArrowRight, Boxes, Building2, ClipboardCheck } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 
 export default function LandingPage() {
   return (
@@ -20,20 +20,16 @@ export default function LandingPage() {
             perder dinero entre cocinas.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button
-              size="lg"
-              render={
-                <Link href="/login">
-                  Empezar prueba gratuita
-                  <ArrowRight className="size-4" />
-                </Link>
-              }
-            />
-            <Button
-              size="lg"
-              variant="outline"
-              render={<Link href="/login">Iniciar sesión</Link>}
-            />
+            <Link href="/login" className={buttonVariants({ size: "lg" })}>
+              Empezar prueba gratuita
+              <ArrowRight className="size-4" />
+            </Link>
+            <Link
+              href="/login"
+              className={buttonVariants({ size: "lg", variant: "outline" })}
+            >
+              Iniciar sesión
+            </Link>
           </div>
           <p className="text-xs text-muted-foreground">
             14 días gratis · Sin tarjeta · Cancela cuando quieras
