@@ -1,0 +1,217 @@
+"use client"
+
+import { useActionState, useEffect } from "react"
+import { useFormStatus } from "react-dom"
+import { toast } from "sonner"
+
+import {
+  createProduct,
+  updateProduct,
+  type ProductActionState,
+} from "@/lib/actions/products"
+import { CategoryManager } from "@/components/products/category-manager"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import type { Tables } from "@/types/db"
+
+const INITIAL: ProductActionState = { status: "idle" }
+
+const BASE_UNIT_LABELS: Record<string, string> = {
+  kg: "Kilogramos (kg)",
+  g: "Gramos (g)",
+  l: "Litros (l)",
+  ml: "Mililitros (ml)",
+  pieza: "Pieza",
+}
+
+function Submit({ mode }: { mode: "create" | "edit" }) {
+  const { pending } = useFormStatus()
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending
+        ? "Guardando..."
+        : mode === "create"
+          ? "Crear producto"
+          : "Guardar cambios"}
+    </Button>
+  )
+}
+
+interface ProductFormProps {
+  mode: "create" | "edit"
+  product?: Tables<"products">
+  categories: Pick<Tables<"categories">, "id" | "name">[]
+  suppliers: Pick<Tables<"suppliers">, "id" | "name">[]
+  onSuccess?: () => void
+}
+
+export function ProductForm({
+  mode,
+  product,
+  categories,
+  suppliers,
+  onSuccess,
+}: ProductFormProps) {
+  const action =
+    mode === "create" ? createProduct : updateProduct.bind(null, product!.id)
+
+  const [state, formAction] = useActionState(action, INITIAL)
+
+  useEffect(() => {
+    if (state.status === "success") {
+      toast.success(state.message)
+      onSuccess?.()
+    } else if (state.status === "error") {
+      toast.error(state.message)
+    }
+  }, [state, onSuccess])
+
+  return (
+    <form action={formAction} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="name">Nombre *</Label>
+        <Input
+          id="name"
+          name="name"
+          required
+          maxLength={120}
+          defaultValue={product?.name ?? ""}
+          placeholder="Ej. Harina de trigo"
+          autoFocus
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="sku">SKU</Label>
+          <Input
+            id="sku"
+            name="sku"
+            maxLength={40}
+            defaultValue={product?.sku ?? ""}
+            placeholder="Opcional"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="base_unit">Unidad base *</Label>
+          <Select name="base_unit" defaultValue={product?.base_unit ?? "kg"}>
+            <SelectTrigger id="base_unit" className="w-full">
+              <SelectValue placeholder="Selecciona" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(BASE_UNIT_LABELS).map(([k, label]) => (
+                <SelectItem key={k} value={k}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="purchase_unit">
+            Unidad de compra
+            <span className="text-xs font-normal text-muted-foreground">
+              {" "}(opcional)
+            </span>
+          </Label>
+          <Input
+            id="purchase_unit"
+            name="purchase_unit"
+            maxLength={40}
+            defaultValue={product?.purchase_unit ?? ""}
+            placeholder="Ej. caja, costal"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="units_per_purchase">Unidades por compra</Label>
+          <Input
+            id="units_per_purchase"
+            name="units_per_purchase"
+            type="number"
+            step="any"
+            min="0"
+            defaultValue={product?.units_per_purchase ?? ""}
+            placeholder="Ej. 12"
+          />
+          <p className="text-xs text-muted-foreground">
+            Cuántas unidades base trae una unidad de compra.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <div className="flex items-end justify-between">
+          <Label htmlFor="category_id">Categoría</Label>
+          <CategoryManager categories={categories} />
+        </div>
+        <Select
+          name="category_id"
+          defaultValue={product?.category_id ?? ""}
+        >
+          <SelectTrigger id="category_id" className="w-full">
+            <SelectValue placeholder="Sin categoría" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">— Sin categoría —</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="default_supplier_id">Proveedor por defecto</Label>
+        <Select
+          name="default_supplier_id"
+          defaultValue={product?.default_supplier_id ?? ""}
+        >
+          <SelectTrigger id="default_supplier_id" className="w-full">
+            <SelectValue placeholder="Sin proveedor por defecto" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">— Ninguno —</SelectItem>
+            {suppliers.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="min_stock">Stock mínimo</Label>
+        <Input
+          id="min_stock"
+          name="min_stock"
+          type="number"
+          step="any"
+          min="0"
+          defaultValue={product?.min_stock ?? 0}
+          placeholder="0"
+        />
+        <p className="text-xs text-muted-foreground">
+          Cuando el inventario baje de este número en cualquier sucursal,
+          aparecerá un badge de alerta.
+        </p>
+      </div>
+
+      <div className="flex justify-end gap-2 pt-2">
+        <Submit mode={mode} />
+      </div>
+    </form>
+  )
+}

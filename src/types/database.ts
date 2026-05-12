@@ -625,6 +625,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_inventory_movement: {
+        Args: {
+          p_location_id: string
+          p_notes?: string
+          p_product_id: string
+          p_quantity: number
+          p_reference_id?: string
+          p_type: Database["public"]["Enums"]["movement_type"]
+          p_unit_cost?: number
+        }
+        Returns: string
+      }
       create_organization_with_owner: {
         Args: { p_address?: string; p_name: string; p_rfc?: string }
         Returns: string
