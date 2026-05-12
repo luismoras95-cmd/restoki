@@ -1,9 +1,6 @@
-import { Store } from "lucide-react"
-
 import { requireOrg } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { PageHeader } from "@/components/page-header"
-import { EmptyState } from "@/components/empty-state"
 import { LocationsList } from "@/components/locations/locations-list"
 
 export const metadata = { title: "Sucursales" }
@@ -27,15 +24,7 @@ export default async function SucursalesPage() {
         title="Sucursales"
         description="Cada sucursal tiene su propio inventario. Desactiva las que ya no operes."
       />
-      {!locations || locations.length === 0 ? (
-        <EmptyState
-          icon={Store}
-          title="Aún no tienes sucursales"
-          description="Agrega tu primera sucursal para empezar a llevar inventario."
-        />
-      ) : (
-        <LocationsList locations={locations} canEdit={canEdit} />
-      )}
+      <LocationsList locations={locations ?? []} canEdit={canEdit} />
     </div>
   )
 }

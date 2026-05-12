@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Plus, Pencil, Power } from "lucide-react"
+import { Plus, Pencil, Power, Store } from "lucide-react"
 import { toast } from "sonner"
 
 import { toggleLocationActive } from "@/lib/actions/locations"
+import { EmptyState } from "@/components/empty-state"
 import { LocationForm } from "@/components/locations/location-form"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -64,16 +65,18 @@ export function LocationsList({ locations, canEdit }: LocationsListProps) {
         onOpenChange={(open) => !open && setSheet({ open: false })}
       >
         {canEdit && (
-          <SheetTrigger
-            render={
-              <Button
-                onClick={() => setSheet({ open: true, mode: "create" })}
-              />
-            }
-          >
-            <Plus className="size-4" />
-            Nueva sucursal
-          </SheetTrigger>
+          <div className="flex justify-end">
+            <SheetTrigger
+              render={
+                <Button
+                  onClick={() => setSheet({ open: true, mode: "create" })}
+                />
+              }
+            >
+              <Plus className="size-4" />
+              Nueva sucursal
+            </SheetTrigger>
+          </div>
         )}
         <SheetContent side="right" className="w-full p-6 sm:max-w-md">
           <SheetHeader className="p-0 pb-4">
@@ -98,6 +101,17 @@ export function LocationsList({ locations, canEdit }: LocationsListProps) {
         </SheetContent>
       </Sheet>
 
+      {locations.length === 0 ? (
+        <EmptyState
+          icon={Store}
+          title="Aún no tienes sucursales"
+          description={
+            canEdit
+              ? "Click 'Nueva sucursal' arriba para agregar la primera."
+              : "Pide a un administrador que agregue sucursales."
+          }
+        />
+      ) : (
       <div className="rounded-xl border bg-card">
         <Table>
           <TableHeader>
@@ -156,6 +170,7 @@ export function LocationsList({ locations, canEdit }: LocationsListProps) {
           </TableBody>
         </Table>
       </div>
+      )}
     </>
   )
 }

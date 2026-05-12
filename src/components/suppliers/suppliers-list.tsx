@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Plus, Pencil, Trash2 } from "lucide-react"
+import { Plus, Pencil, Trash2, Truck } from "lucide-react"
 import { toast } from "sonner"
 
 import { deleteSupplier } from "@/lib/actions/suppliers"
+import { EmptyState } from "@/components/empty-state"
 import { SupplierForm } from "@/components/suppliers/supplier-form"
 import { Button } from "@/components/ui/button"
 import {
@@ -62,24 +63,24 @@ export function SuppliersList({ suppliers, canEdit }: SuppliersListProps) {
     })
   }
 
+  const newButton = canEdit ? (
+    <SheetTrigger
+      render={
+        <Button onClick={() => setSheet({ open: true, mode: "create" })} />
+      }
+    >
+      <Plus className="size-4" />
+      Nuevo proveedor
+    </SheetTrigger>
+  ) : null
+
   return (
     <>
       <Sheet
         open={sheet.open}
         onOpenChange={(open) => !open && setSheet({ open: false })}
       >
-        {canEdit && (
-          <SheetTrigger
-            render={
-              <Button
-                onClick={() => setSheet({ open: true, mode: "create" })}
-              />
-            }
-          >
-            <Plus className="size-4" />
-            Nuevo proveedor
-          </SheetTrigger>
-        )}
+        <div className="flex justify-end">{newButton}</div>
         <SheetContent side="right" className="w-full p-6 sm:max-w-md">
           <SheetHeader className="p-0 pb-4">
             <SheetTitle>
@@ -99,6 +100,18 @@ export function SuppliersList({ suppliers, canEdit }: SuppliersListProps) {
             />
           )}
         </SheetContent>
+
+        {suppliers.length === 0 ? (
+          <EmptyState
+            icon={Truck}
+            title="Aún no tienes proveedores"
+            description={
+              canEdit
+                ? "Click 'Nuevo proveedor' arriba para agregar el primero."
+                : "Agrega proveedores para asociarlos a productos y compras."
+            }
+          />
+        ) : null}
       </Sheet>
 
       <Dialog
@@ -132,6 +145,7 @@ export function SuppliersList({ suppliers, canEdit }: SuppliersListProps) {
         </DialogContent>
       </Dialog>
 
+      {suppliers.length > 0 && (
       <div className="rounded-xl border bg-card">
         <Table>
           <TableHeader>
@@ -189,6 +203,7 @@ export function SuppliersList({ suppliers, canEdit }: SuppliersListProps) {
           </TableBody>
         </Table>
       </div>
+      )}
     </>
   )
 }

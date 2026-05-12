@@ -1,9 +1,6 @@
-import { Box } from "lucide-react"
-
 import { requireOrg } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { PageHeader } from "@/components/page-header"
-import { EmptyState } from "@/components/empty-state"
 import { ProductsList } from "@/components/products/products-list"
 
 export const metadata = { title: "Productos" }
@@ -46,20 +43,12 @@ export default async function ProductosPage() {
         title="Productos"
         description="Catálogo con unidad base, factor de conversión y stock mínimo."
       />
-      {products.length === 0 ? (
-        <EmptyState
-          icon={Box}
-          title="Aún no tienes productos"
-          description="Agrega tu primer producto para empezar a registrar inventario y compras."
-        />
-      ) : (
-        <ProductsList
-          products={products}
-          categories={categories}
-          suppliers={suppliers}
-          canEdit={canEdit}
-        />
-      )}
+      <ProductsList
+        products={products}
+        categories={categories}
+        suppliers={suppliers}
+        canEdit={canEdit}
+      />
     </div>
   )
 }

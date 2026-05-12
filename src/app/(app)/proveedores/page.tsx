@@ -1,9 +1,6 @@
-import { Truck } from "lucide-react"
-
 import { requireOrg } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { PageHeader } from "@/components/page-header"
-import { EmptyState } from "@/components/empty-state"
 import { SuppliersList } from "@/components/suppliers/suppliers-list"
 
 export const metadata = { title: "Proveedores" }
@@ -27,15 +24,7 @@ export default async function ProveedoresPage() {
         title="Proveedores"
         description="Directorio de proveedores con datos de contacto y notas."
       />
-      {!suppliers || suppliers.length === 0 ? (
-        <EmptyState
-          icon={Truck}
-          title="Aún no tienes proveedores"
-          description="Agrega proveedores para asociarlos a productos y compras."
-        />
-      ) : (
-        <SuppliersList suppliers={suppliers} canEdit={canEdit} />
-      )}
+      <SuppliersList suppliers={suppliers ?? []} canEdit={canEdit} />
     </div>
   )
 }

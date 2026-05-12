@@ -1,10 +1,11 @@
 "use client"
 
 import { useMemo, useState, useTransition } from "react"
-import { Plus, Pencil, Power, Search } from "lucide-react"
+import { Plus, Pencil, Power, Search, Box } from "lucide-react"
 import { toast } from "sonner"
 
 import { toggleProductActive } from "@/lib/actions/products"
+import { EmptyState } from "@/components/empty-state"
 import { ProductForm } from "@/components/products/product-form"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -136,6 +137,17 @@ export function ProductsList({
         </SheetContent>
       </Sheet>
 
+      {products.length === 0 ? (
+        <EmptyState
+          icon={Box}
+          title="Aún no tienes productos"
+          description={
+            canEdit
+              ? "Click 'Nuevo producto' arriba para agregar el primero."
+              : "Pide a un administrador que agregue productos al catálogo."
+          }
+        />
+      ) : (
       <div className="rounded-xl border bg-card">
         <Table>
           <TableHeader>
@@ -219,6 +231,7 @@ export function ProductsList({
           </TableBody>
         </Table>
       </div>
+      )}
     </>
   )
 }
