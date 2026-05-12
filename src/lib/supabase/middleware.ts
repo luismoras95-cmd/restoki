@@ -41,7 +41,18 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { pathname } = request.nextUrl
+  const { pathname, searchParams } = request.nextUrl
+
+  // Forward ?code= a /auth/callback (rescata magic links viejos
+  // generados cuando Site URL apuntaba a la raíz).
+  if (
+    searchParams.has("code") &&
+    pathname !== "/auth/callback"
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/auth/callback"
+    return NextResponse.redirect(url)
+  }
 
   // Usuario no autenticado intentando entrar a una ruta privada → /login
   if (!user && !isPublic(pathname)) {
