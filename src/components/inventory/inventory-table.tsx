@@ -98,7 +98,7 @@ export function InventoryTable({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Select value={selectedLocationId} onValueChange={setLocation}>
             <SelectTrigger className="w-full sm:w-56">
-              <SelectValue />
+              <SelectValue>{selectedLocationName}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {locations.map((l) => (
