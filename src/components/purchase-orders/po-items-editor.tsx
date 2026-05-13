@@ -122,6 +122,10 @@ export function POItemsEditor({
     0
   )
 
+  const liveQty = Number(quantity) || 0
+  const liveCost = Number(unitCost) || 0
+  const liveSubtotal = liveQty * liveCost
+
   return (
     <div className="flex flex-col gap-4">
       {items.length === 0 ? (
@@ -194,69 +198,82 @@ export function POItemsEditor({
       {editable && products.length > 0 && (
         <form
           action={formAction}
-          className="grid grid-cols-1 gap-3 rounded-xl border bg-card p-4 sm:grid-cols-[1fr_120px_120px_auto]"
+          className="flex flex-col gap-3 rounded-xl border bg-card p-4"
         >
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="po-item-product" className="text-xs">
-              Producto
-            </Label>
-            <Select
-              name="product_id"
-              value={productId}
-              onValueChange={handleProductChange}
-            >
-              <SelectTrigger id="po-item-product" className="w-full">
-                <SelectValue>
-                  {selectedProduct?.name ?? "Selecciona producto"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {products.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} ({p.base_unit})
-                    {p.default_cost != null && (
-                      <span className="ml-1 text-xs text-muted-foreground">
-                        · {currency.format(Number(p.default_cost))}
-                      </span>
-                    )}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_120px_120px]">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="po-item-product" className="text-xs">
+                Producto
+              </Label>
+              <Select
+                name="product_id"
+                value={productId}
+                onValueChange={handleProductChange}
+              >
+                <SelectTrigger id="po-item-product" className="w-full">
+                  <SelectValue>
+                    {selectedProduct?.name ?? "Selecciona producto"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {products.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name} ({p.base_unit})
+                      {p.default_cost != null && (
+                        <span className="ml-1 text-xs text-muted-foreground">
+                          · {currency.format(Number(p.default_cost))}
+                        </span>
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="po-item-qty" className="text-xs">
+                Cantidad
+              </Label>
+              <Input
+                id="po-item-qty"
+                name="quantity"
+                type="number"
+                step="any"
+                min="0"
+                required
+                placeholder="0"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="po-item-cost" className="text-xs">
+                Costo unit.
+              </Label>
+              <Input
+                id="po-item-cost"
+                name="unit_cost"
+                type="number"
+                step="any"
+                min="0"
+                required
+                placeholder="0.00"
+                value={unitCost}
+                onChange={(e) => setUnitCost(e.target.value)}
+              />
+            </div>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="po-item-qty" className="text-xs">
-              Cantidad
-            </Label>
-            <Input
-              id="po-item-qty"
-              name="quantity"
-              type="number"
-              step="any"
-              min="0"
-              required
-              placeholder="0"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="po-item-cost" className="text-xs">
-              Costo unit.
-            </Label>
-            <Input
-              id="po-item-cost"
-              name="unit_cost"
-              type="number"
-              step="any"
-              min="0"
-              required
-              placeholder="0.00"
-              value={unitCost}
-              onChange={(e) => setUnitCost(e.target.value)}
-            />
-          </div>
-          <div className="flex items-end">
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm">
+              Subtotal de la línea:{" "}
+              <span className="text-lg font-semibold tabular-nums">
+                {currency.format(liveSubtotal)}
+              </span>
+              {liveQty > 0 && liveCost > 0 && (
+                <span className="ml-1 text-xs text-muted-foreground">
+                  ({number.format(liveQty)} × {currency.format(liveCost)})
+                </span>
+              )}
+            </p>
             <AddSubmit />
           </div>
         </form>
