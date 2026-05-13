@@ -2,6 +2,7 @@ import {
   ArrowRightLeft,
   Barcode,
   Box,
+  HeartPulse,
   LayoutDashboard,
   Package,
   Settings,
@@ -19,6 +20,7 @@ export type NavItem = {
 
 export const APP_NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Indicadores", href: "/indicadores", icon: HeartPulse },
   { label: "Inventario", href: "/inventario", icon: Package },
   { label: "Escáner", href: "/escaner", icon: Barcode },
   { label: "Compras", href: "/compras", icon: ShoppingCart },
