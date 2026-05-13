@@ -188,9 +188,9 @@ function CaseStudy() {
           <ChefHat className="size-8 text-primary" />
           <blockquote className="text-lg italic leading-relaxed">
             &ldquo;Lo construí porque ningún software me servía. MarketMan
-            cobra el multi-sucursal como add-on. Soft Restaurant solo es punto
-            de venta. Yo necesitaba saber qué tengo en cada cocina y cuánto me
-            está costando — en español y en pesos.&rdquo;
+            cobra el multi-sucursal como add-on. Yo necesitaba saber qué tengo
+            en cada cocina, poder hacer traspasos entre sucursales y saber
+            cuánto dinero se tiene invertido — en español y en pesos.&rdquo;
           </blockquote>
           <figcaption className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">Luis Mora</span> ·
