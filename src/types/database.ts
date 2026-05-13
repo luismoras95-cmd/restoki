@@ -235,6 +235,7 @@ export type Database = {
           created_at: string | null
           id: string
           name: string
+          notification_phone: string | null
           rfc: string | null
           updated_at: string | null
         }
@@ -243,6 +244,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name: string
+          notification_phone?: string | null
           rfc?: string | null
           updated_at?: string | null
         }
@@ -251,6 +253,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
+          notification_phone?: string | null
           rfc?: string | null
           updated_at?: string | null
         }
@@ -262,6 +265,7 @@ export type Database = {
           base_unit: string
           category_id: string | null
           created_at: string | null
+          default_cost: number | null
           default_supplier_id: string | null
           id: string
           is_active: boolean | null
@@ -278,6 +282,7 @@ export type Database = {
           base_unit: string
           category_id?: string | null
           created_at?: string | null
+          default_cost?: number | null
           default_supplier_id?: string | null
           id?: string
           is_active?: boolean | null
@@ -294,6 +299,7 @@ export type Database = {
           base_unit?: string
           category_id?: string | null
           created_at?: string | null
+          default_cost?: number | null
           default_supplier_id?: string | null
           id?: string
           is_active?: boolean | null

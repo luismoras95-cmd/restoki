@@ -22,6 +22,7 @@ const ProductSchema = z.object({
     .or(z.literal(0))
     .or(z.nan()),
   min_stock: z.number().min(0).optional().or(z.nan()),
+  default_cost: z.number().min(0).optional().or(z.nan()),
 })
 
 export type ProductActionState =
@@ -47,6 +48,7 @@ function parse(formData: FormData) {
     purchase_unit: formData.get("purchase_unit") ?? "",
     units_per_purchase: parseNumber(formData.get("units_per_purchase")),
     min_stock: parseNumber(formData.get("min_stock")),
+    default_cost: parseNumber(formData.get("default_cost")),
   })
 }
 
@@ -100,7 +102,7 @@ export async function createProduct(
     ? data.sku
     : await nextAutoSku(supabase, org.id)
 
-  const { error } = await supabase.from("products").insert({
+  const insertRow = {
     organization_id: org.id,
     name: data.name,
     sku,
@@ -113,7 +115,12 @@ export async function createProduct(
         ? data.units_per_purchase
         : null,
     min_stock: Number.isFinite(data.min_stock) ? data.min_stock : 0,
-  })
+    default_cost: Number.isFinite(data.default_cost)
+      ? data.default_cost
+      : null,
+  }
+
+  const { error } = await supabase.from("products").insert(insertRow)
 
   if (error) return { status: "error", message: error.message }
 
@@ -142,22 +149,26 @@ export async function updateProduct(
 
   const data = parsed.data
   const supabase = await createClient()
+  const updateRow = {
+    name: data.name,
+    sku: data.sku || null,
+    category_id: data.category_id || null,
+    default_supplier_id: data.default_supplier_id || null,
+    base_unit: data.base_unit,
+    purchase_unit: data.purchase_unit || null,
+    units_per_purchase:
+      Number.isFinite(data.units_per_purchase) && data.units_per_purchase! > 0
+        ? data.units_per_purchase
+        : null,
+    min_stock: Number.isFinite(data.min_stock) ? data.min_stock : 0,
+    default_cost: Number.isFinite(data.default_cost)
+      ? data.default_cost
+      : null,
+    updated_at: new Date().toISOString(),
+  }
   const { error } = await supabase
     .from("products")
-    .update({
-      name: data.name,
-      sku: data.sku || null,
-      category_id: data.category_id || null,
-      default_supplier_id: data.default_supplier_id || null,
-      base_unit: data.base_unit,
-      purchase_unit: data.purchase_unit || null,
-      units_per_purchase:
-        Number.isFinite(data.units_per_purchase) && data.units_per_purchase! > 0
-          ? data.units_per_purchase
-          : null,
-      min_stock: Number.isFinite(data.min_stock) ? data.min_stock : 0,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateRow)
     .eq("id", id)
     .eq("organization_id", org.id)
 

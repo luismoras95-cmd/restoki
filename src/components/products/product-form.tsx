@@ -221,21 +221,42 @@ export function ProductForm({
         </Select>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="min_stock">Stock mínimo</Label>
-        <Input
-          id="min_stock"
-          name="min_stock"
-          type="number"
-          step="any"
-          min="0"
-          defaultValue={product?.min_stock ?? 0}
-          placeholder="0"
-        />
-        <p className="text-xs text-muted-foreground">
-          Cuando el inventario baje de este número en cualquier sucursal,
-          aparecerá un badge de alerta.
-        </p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="default_cost">Costo estimado (MXN)</Label>
+          <Input
+            id="default_cost"
+            name="default_cost"
+            type="number"
+            step="any"
+            min="0"
+            defaultValue={
+              product && "default_cost" in product
+                ? ((product as { default_cost?: number | null }).default_cost ?? "")
+                : ""
+            }
+            placeholder="Ej. 25.50"
+          />
+          <p className="text-xs text-muted-foreground">
+            Se prefilla al agregar líneas en compras. El CPP real lo calcula
+            la app con los costos de cada recepción.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="min_stock">Stock mínimo</Label>
+          <Input
+            id="min_stock"
+            name="min_stock"
+            type="number"
+            step="any"
+            min="0"
+            defaultValue={product?.min_stock ?? 0}
+            placeholder="0"
+          />
+          <p className="text-xs text-muted-foreground">
+            Si el stock baja de aquí, sale badge de alerta.
+          </p>
+        </div>
       </div>
 
       <div className="flex justify-end gap-2 pt-2">

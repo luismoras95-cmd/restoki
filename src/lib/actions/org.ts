@@ -10,6 +10,7 @@ const UpdateOrgSchema = z.object({
   name: z.string().trim().min(2, "Mínimo 2 caracteres").max(120),
   rfc: z.string().trim().max(13).optional().or(z.literal("")),
   address: z.string().trim().max(280).optional().or(z.literal("")),
+  notification_phone: z.string().trim().max(40).optional().or(z.literal("")),
 })
 
 export type UpdateOrgState =
@@ -36,6 +37,7 @@ export async function updateOrganization(
     name: formData.get("name"),
     rfc: formData.get("rfc") ?? "",
     address: formData.get("address") ?? "",
+    notification_phone: formData.get("notification_phone") ?? "",
   })
 
   if (!parsed.success) {
@@ -46,14 +48,16 @@ export async function updateOrganization(
   }
 
   const supabase = await createClient()
+  const updateRow = {
+    name: parsed.data.name,
+    rfc: parsed.data.rfc || null,
+    address: parsed.data.address || null,
+    notification_phone: parsed.data.notification_phone || null,
+    updated_at: new Date().toISOString(),
+  }
   const { error } = await supabase
     .from("organizations")
-    .update({
-      name: parsed.data.name,
-      rfc: parsed.data.rfc || null,
-      address: parsed.data.address || null,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateRow)
     .eq("id", org.id)
 
   if (error) {

@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server"
 import { POActions } from "@/components/purchase-orders/po-actions"
 import { POHeaderForm } from "@/components/purchase-orders/po-header-form"
 import { POItemsEditor } from "@/components/purchase-orders/po-items-editor"
+import { POShareButtons } from "@/components/purchase-orders/po-share-buttons"
 import { POStatusBadge } from "@/components/purchase-orders/po-status-badge"
 
 const EDITOR_ROLES = new Set(["owner", "admin", "manager"])
@@ -39,7 +40,7 @@ export default async function POPage({ params }: PageProps) {
       supabase
         .from("purchase_orders")
         .select(
-          "*, location:locations(id, name), supplier:suppliers(id, name)"
+          "*, location:locations(id, name), supplier:suppliers(id, name, phone)"
         )
         .eq("id", id)
         .eq("organization_id", org.id)
@@ -62,7 +63,7 @@ export default async function POPage({ params }: PageProps) {
         .order("name", { ascending: true }),
       supabase
         .from("products")
-        .select("id, name, base_unit")
+        .select("id, name, base_unit, default_cost")
         .eq("organization_id", org.id)
         .eq("is_active", true)
         .order("name", { ascending: true }),
@@ -106,12 +107,37 @@ export default async function POPage({ params }: PageProps) {
               ` · Recibida el ${dateTimeFmt.format(new Date(po.received_at))}`}
           </p>
         </div>
-        <POActions
-          poId={id}
-          status={status}
-          canEdit={canEdit}
-          itemsCount={items.length}
-        />
+        <div className="flex flex-col items-end gap-2">
+          <POActions
+            poId={id}
+            status={status}
+            canEdit={canEdit}
+            itemsCount={items.length}
+          />
+          <POShareButtons
+            poId={id}
+            orgName={org.name}
+            orgPhone={org.notification_phone}
+            status={status}
+            total={items.reduce(
+              (sum, it) =>
+                sum + Number(it.quantity ?? 0) * Number(it.unit_cost ?? 0),
+              0
+            )}
+            itemsSummary={items.map((it) => ({
+              name: it.product?.name ?? "—",
+              qty: Number(it.quantity ?? 0),
+              unit: it.product?.base_unit ?? "",
+              cost: Number(it.unit_cost ?? 0),
+            }))}
+            supplier={
+              po.supplier
+                ? { name: po.supplier.name, phone: po.supplier.phone }
+                : null
+            }
+            locationName={po.location?.name ?? null}
+          />
+        </div>
       </div>
 
       <section className="flex flex-col gap-3">

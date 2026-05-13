@@ -42,10 +42,17 @@ type Item = Tables<"purchase_order_items"> & {
   product?: Pick<Tables<"products">, "id" | "name" | "base_unit"> | null
 }
 
+type ProductWithCost = Pick<
+  Tables<"products">,
+  "id" | "name" | "base_unit"
+> & {
+  default_cost?: number | null
+}
+
 interface POItemsEditorProps {
   poId: string
   items: Item[]
-  products: Pick<Tables<"products">, "id" | "name" | "base_unit">[]
+  products: ProductWithCost[]
   editable: boolean
 }
 
@@ -68,6 +75,8 @@ export function POItemsEditor({
   const addAction = addPOItem.bind(null, poId)
   const [state, formAction] = useActionState(addAction, INITIAL)
   const [productId, setProductId] = useState<string>("")
+  const [quantity, setQuantity] = useState<string>("")
+  const [unitCost, setUnitCost] = useState<string>("")
   const [pending, startTransition] = useTransition()
   const [busyId, setBusyId] = useState<string | null>(null)
 
@@ -75,6 +84,8 @@ export function POItemsEditor({
     if (state.status === "success") {
       toast.success(state.message)
       setProductId("")
+      setQuantity("")
+      setUnitCost("")
     } else if (state.status === "error") {
       toast.error(state.message)
     }
@@ -92,6 +103,15 @@ export function POItemsEditor({
         setBusyId(null)
       }
     })
+  }
+
+  function handleProductChange(value: string | null) {
+    const id = value ?? ""
+    setProductId(id)
+    const product = products.find((p) => p.id === id)
+    if (product && product.default_cost != null && unitCost === "") {
+      setUnitCost(String(product.default_cost))
+    }
   }
 
   const productMap = new Map(products.map((p) => [p.id, p]))
@@ -183,7 +203,7 @@ export function POItemsEditor({
             <Select
               name="product_id"
               value={productId}
-              onValueChange={(v) => setProductId(v ?? "")}
+              onValueChange={handleProductChange}
             >
               <SelectTrigger id="po-item-product" className="w-full">
                 <SelectValue>
@@ -194,6 +214,11 @@ export function POItemsEditor({
                 {products.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.name} ({p.base_unit})
+                    {p.default_cost != null && (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        · {currency.format(Number(p.default_cost))}
+                      </span>
+                    )}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -211,6 +236,8 @@ export function POItemsEditor({
               min="0"
               required
               placeholder="0"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -225,6 +252,8 @@ export function POItemsEditor({
               min="0"
               required
               placeholder="0.00"
+              value={unitCost}
+              onChange={(e) => setUnitCost(e.target.value)}
             />
           </div>
           <div className="flex items-end">

@@ -26,7 +26,10 @@ function Submit({ disabled }: { disabled?: boolean }) {
 }
 
 interface OrgFormProps {
-  org: OrgWithRole & { address?: string | null }
+  org: OrgWithRole & {
+    address?: string | null
+    notification_phone?: string | null
+  }
   canEdit: boolean
 }
 
@@ -78,6 +81,24 @@ export function OrgForm({ org, canEdit }: OrgFormProps) {
           placeholder="Calle, número, colonia, ciudad"
           disabled={!canEdit}
         />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="notification_phone">
+          WhatsApp para notificaciones
+        </Label>
+        <Input
+          id="notification_phone"
+          name="notification_phone"
+          maxLength={40}
+          type="tel"
+          defaultValue={org.notification_phone ?? ""}
+          placeholder="Ej. +52 662 123 4567"
+          disabled={!canEdit}
+        />
+        <p className="text-xs text-muted-foreground">
+          Se usa para los botones &ldquo;WhatsApp al equipo&rdquo; en compras y
+          reportes. Incluye lada del país (Ej. +52 para México).
+        </p>
       </div>
       {canEdit ? (
         <div className="flex">
