@@ -194,7 +194,7 @@ function CaseStudy() {
           </blockquote>
           <figcaption className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">Luis Mora</span> ·
-            Dueño de Pancake Factory · Fundador de Restoki
+            Socio de Pancake Factory MX · Fundador de Restoki
           </figcaption>
         </figure>
       </div>
