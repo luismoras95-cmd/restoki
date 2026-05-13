@@ -5,6 +5,7 @@ import { requireOrg } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
+import { ExportCsvButton } from "@/components/export-csv-button"
 import { NewTransferButton } from "@/components/transfers/new-transfer-button"
 import { TransferStatusBadge } from "@/components/transfers/transfer-status-badge"
 import {
@@ -56,7 +57,15 @@ export default async function TransferenciasPage() {
         title="Transferencias entre sucursales"
         description="Mueve stock de una sucursal a otra preservando el costo promedio ponderado."
         action={
-          canEdit ? <NewTransferButton locations={locations} /> : null
+          <div className="flex gap-2">
+            <ExportCsvButton
+              endpoint="/api/export/transfers"
+              label="Exportar"
+              withDateRange
+              description="Exporta transferencias (encabezado + líneas) por rango de fechas."
+            />
+            {canEdit ? <NewTransferButton locations={locations} /> : null}
+          </div>
         }
       />
 

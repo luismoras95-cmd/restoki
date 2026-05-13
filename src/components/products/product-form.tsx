@@ -107,16 +107,6 @@ export function ProductForm({
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="sku">SKU</Label>
-          <Input
-            id="sku"
-            name="sku"
-            maxLength={40}
-            defaultValue={product?.sku ?? ""}
-            placeholder="Opcional"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
           <Label htmlFor="base_unit">Unidad base *</Label>
           <Select
             name="base_unit"
@@ -135,6 +125,22 @@ export function ProductForm({
             </SelectContent>
           </Select>
         </div>
+        {mode === "edit" && product?.sku && (
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="sku">SKU</Label>
+            <Input
+              id="sku"
+              name="sku"
+              maxLength={40}
+              defaultValue={product.sku}
+              readOnly
+              className="bg-muted/40"
+            />
+            <p className="text-xs text-muted-foreground">
+              Generado automáticamente al crear el producto.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

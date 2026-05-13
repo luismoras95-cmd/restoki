@@ -50,6 +50,33 @@ function parse(formData: FormData) {
   })
 }
 
+async function nextAutoSku(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orgId: string
+): Promise<string> {
+  // Estrategia: contar productos de la org y usar count + 1 con padding.
+  // Si colisiona con un SKU manual existente, reintenta hasta 5 veces.
+  const { count } = await supabase
+    .from("products")
+    .select("*", { count: "exact", head: true })
+    .eq("organization_id", orgId)
+
+  let n = (count ?? 0) + 1
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const sku = `P-${String(n).padStart(4, "0")}`
+    const { data: exists } = await supabase
+      .from("products")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("sku", sku)
+      .maybeSingle()
+    if (!exists) return sku
+    n++
+  }
+  // Fallback: timestamp si por alguna razón no encontramos hueco
+  return `P-${Date.now().toString(36).toUpperCase()}`
+}
+
 export async function createProduct(
   _prev: ProductActionState,
   formData: FormData
@@ -69,10 +96,14 @@ export async function createProduct(
 
   const data = parsed.data
   const supabase = await createClient()
+  const sku = data.sku && data.sku.trim() !== ""
+    ? data.sku
+    : await nextAutoSku(supabase, org.id)
+
   const { error } = await supabase.from("products").insert({
     organization_id: org.id,
     name: data.name,
-    sku: data.sku || null,
+    sku,
     category_id: data.category_id || null,
     default_supplier_id: data.default_supplier_id || null,
     base_unit: data.base_unit,

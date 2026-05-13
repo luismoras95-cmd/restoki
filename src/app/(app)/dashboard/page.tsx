@@ -14,6 +14,7 @@ import {
 import { requireOrg } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { PageHeader } from "@/components/page-header"
+import { ExportCsvButton } from "@/components/export-csv-button"
 import {
   Card,
   CardContent,
@@ -21,7 +22,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import type { Tables, Enums } from "@/types/db"
 
 export const metadata = { title: "Dashboard" }
@@ -153,6 +153,14 @@ export default async function DashboardPage() {
       <PageHeader
         title="Dashboard"
         description={`Vista general de ${org.name}.`}
+        action={
+          <ExportCsvButton
+            endpoint="/api/export/movements"
+            label="Exportar movimientos"
+            withDateRange
+            description="Exporta la bitácora completa de movimientos por rango de fechas."
+          />
+        }
       />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

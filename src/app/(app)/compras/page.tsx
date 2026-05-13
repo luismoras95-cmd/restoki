@@ -5,6 +5,7 @@ import { requireOrg } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
+import { ExportCsvButton } from "@/components/export-csv-button"
 import { NewPOButton } from "@/components/purchase-orders/new-po-button"
 import { POStatusBadge } from "@/components/purchase-orders/po-status-badge"
 import {
@@ -67,9 +68,17 @@ export default async function ComprasPage() {
         title="Órdenes de compra"
         description="Crea borradores, agrega líneas y recibe para que el stock se actualice automáticamente."
         action={
-          canEdit && locations.length > 0 ? (
-            <NewPOButton locations={locations} suppliers={suppliers} />
-          ) : null
+          <div className="flex gap-2">
+            <ExportCsvButton
+              endpoint="/api/export/purchase-orders"
+              label="Exportar"
+              withDateRange
+              description="Exporta órdenes de compra (encabezado + líneas) por rango de fechas."
+            />
+            {canEdit && locations.length > 0 ? (
+              <NewPOButton locations={locations} suppliers={suppliers} />
+            ) : null}
+          </div>
         }
       />
 

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import { buttonVariants } from "@/components/ui/button"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
+import { ExportCsvButton } from "@/components/export-csv-button"
 import {
   InventoryTable,
   type InventoryRow,
@@ -127,6 +128,12 @@ export default async function InventarioPage({
       <PageHeader
         title="Inventario"
         description="Selecciona sucursal, busca productos, registra ajustes o mermas."
+        action={
+          <ExportCsvButton
+            endpoint="/api/export/inventory"
+            label="Exportar CSV"
+          />
+        }
       />
       <InventoryTable
         locations={locations}
