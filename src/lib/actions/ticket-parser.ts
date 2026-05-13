@@ -109,11 +109,30 @@ export async function parseTicketImage(
     return { status: "error", message: "Sin permiso para subir tickets." }
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const rawKey = process.env.ANTHROPIC_API_KEY
+  const trimmedKey = rawKey?.trim() ?? ""
+
+  if (!rawKey || trimmedKey === "") {
+    const anthropicVars = Object.keys(process.env)
+      .filter((k) => k.toUpperCase().includes("ANTHROP") || k.toUpperCase().includes("CLAUDE"))
+      .join(", ")
     return {
       status: "error",
-      message:
-        "Falta ANTHROPIC_API_KEY en variables de entorno. Pídeselo al administrador.",
+      message: `[diag] ANTHROPIC_API_KEY type=${typeof rawKey} len=${rawKey?.length ?? 0} trimLen=${trimmedKey.length} similarVars=[${anthropicVars || "ninguna"}] runtime=${process.env.VERCEL ? "vercel" : "local"} commitSha=${(process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown").slice(0, 7)}`,
+    }
+  }
+
+  if (trimmedKey !== rawKey) {
+    return {
+      status: "error",
+      message: `[diag] ANTHROPIC_API_KEY tiene espacios/saltos extra (len=${rawKey.length} vs trimLen=${trimmedKey.length}). Edítala en Vercel y reguárdala sin espacios al inicio/final.`,
+    }
+  }
+
+  if (!trimmedKey.startsWith("sk-ant-")) {
+    return {
+      status: "error",
+      message: `[diag] ANTHROPIC_API_KEY no empieza con "sk-ant-" (empieza con "${trimmedKey.slice(0, 8)}..."). Reemplázala con una key válida.`,
     }
   }
 
