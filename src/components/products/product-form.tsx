@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect } from "react"
+import { useActionState, useEffect, useState } from "react"
 import { useFormStatus } from "react-dom"
 import { toast } from "sonner"
 
@@ -65,6 +65,18 @@ export function ProductForm({
 
   const [state, formAction] = useActionState(action, INITIAL)
 
+  // Estado controlado para los selects (workaround del bug de base-ui que
+  // muestra el value crudo en lugar del ItemText en triggers).
+  const [baseUnit, setBaseUnit] = useState<string>(
+    product?.base_unit ?? "kg"
+  )
+  const [categoryId, setCategoryId] = useState<string>(
+    product?.category_id ?? ""
+  )
+  const [supplierId, setSupplierId] = useState<string>(
+    product?.default_supplier_id ?? ""
+  )
+
   useEffect(() => {
     if (state.status === "success") {
       toast.success(state.message)
@@ -73,6 +85,11 @@ export function ProductForm({
       toast.error(state.message)
     }
   }, [state, onSuccess])
+
+  const categoryName =
+    categories.find((c) => c.id === categoryId)?.name ?? "— Sin categoría —"
+  const supplierName =
+    suppliers.find((s) => s.id === supplierId)?.name ?? "— Ninguno —"
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -101,9 +118,13 @@ export function ProductForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="base_unit">Unidad base *</Label>
-          <Select name="base_unit" defaultValue={product?.base_unit ?? "kg"}>
+          <Select
+            name="base_unit"
+            value={baseUnit}
+            onValueChange={(v) => v && setBaseUnit(v)}
+          >
             <SelectTrigger id="base_unit" className="w-full">
-              <SelectValue placeholder="Selecciona" />
+              <SelectValue>{BASE_UNIT_LABELS[baseUnit] ?? baseUnit}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {Object.entries(BASE_UNIT_LABELS).map(([k, label]) => (
@@ -156,10 +177,11 @@ export function ProductForm({
         </div>
         <Select
           name="category_id"
-          defaultValue={product?.category_id ?? ""}
+          value={categoryId}
+          onValueChange={(v) => setCategoryId(v ?? "")}
         >
           <SelectTrigger id="category_id" className="w-full">
-            <SelectValue placeholder="Sin categoría" />
+            <SelectValue>{categoryName}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">— Sin categoría —</SelectItem>
@@ -176,10 +198,11 @@ export function ProductForm({
         <Label htmlFor="default_supplier_id">Proveedor por defecto</Label>
         <Select
           name="default_supplier_id"
-          defaultValue={product?.default_supplier_id ?? ""}
+          value={supplierId}
+          onValueChange={(v) => setSupplierId(v ?? "")}
         >
           <SelectTrigger id="default_supplier_id" className="w-full">
-            <SelectValue placeholder="Sin proveedor por defecto" />
+            <SelectValue>{supplierName}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">— Ninguno —</SelectItem>
