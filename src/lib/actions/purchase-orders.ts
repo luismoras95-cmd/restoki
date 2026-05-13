@@ -253,3 +253,67 @@ export async function cancelPO(poId: string) {
   revalidatePath("/compras")
   void org
 }
+
+const TicketLineSchema = z.object({
+  product_id: z.string().uuid("Selecciona un producto para cada línea"),
+  quantity: z.number().positive("La cantidad debe ser positiva"),
+  unit_cost: z.number().min(0, "El costo no puede ser negativo"),
+})
+
+const CreateFromTicketSchema = z.object({
+  location_id: z.string().uuid("Selecciona una sucursal"),
+  supplier_id: z.string().uuid().nullable(),
+  notes: z.string().max(500).nullable(),
+  items: z.array(TicketLineSchema).min(1, "Agrega al menos una línea"),
+})
+
+export type CreateFromTicketInput = z.infer<typeof CreateFromTicketSchema>
+
+export async function createPOFromTicket(input: CreateFromTicketInput) {
+  const { org, user } = await requireOrg()
+  if (!EDITOR_ROLES.has(org.role)) {
+    throw new Error("Sin permiso para crear órdenes de compra.")
+  }
+
+  const parsed = CreateFromTicketSchema.safeParse(input)
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Datos inválidos")
+  }
+
+  const supabase = await createClient()
+
+  const { data: po, error: poErr } = await supabase
+    .from("purchase_orders")
+    .insert({
+      organization_id: org.id,
+      location_id: parsed.data.location_id,
+      supplier_id: parsed.data.supplier_id,
+      notes: parsed.data.notes,
+      created_by: user.id,
+    })
+    .select("id")
+    .single()
+
+  if (poErr || !po) {
+    throw new Error(poErr?.message ?? "No se pudo crear la orden")
+  }
+
+  const lines = parsed.data.items.map((it) => ({
+    purchase_order_id: po.id,
+    product_id: it.product_id,
+    quantity: it.quantity,
+    unit_cost: it.unit_cost,
+  }))
+
+  const { error: itemsErr } = await supabase
+    .from("purchase_order_items")
+    .insert(lines)
+
+  if (itemsErr) {
+    await supabase.from("purchase_orders").delete().eq("id", po.id)
+    throw new Error(itemsErr.message)
+  }
+
+  revalidatePath("/compras")
+  redirect(`/compras/${po.id}`)
+}

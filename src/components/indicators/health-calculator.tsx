@@ -55,7 +55,7 @@ const RANGES = [
   {
     id: "healthy",
     min: 15,
-    max: 22,
+    max: 25,
     label: "Saludable",
     description:
       "Rango normal para restaurantes. Tienes buffer suficiente sin sobreinventario.",
@@ -64,7 +64,7 @@ const RANGES = [
   },
   {
     id: "warning",
-    min: 22,
+    min: 25,
     max: 30,
     label: "Cuidado con sobreinventario",
     description:
