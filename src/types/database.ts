@@ -529,18 +529,21 @@ export type Database = {
           product_id: string
           quantity: number
           transfer_id: string
+          unit_cost: number | null
         }
         Insert: {
           id?: string
           product_id: string
           quantity: number
           transfer_id: string
+          unit_cost?: number | null
         }
         Update: {
           id?: string
           product_id?: string
           quantity?: number
           transfer_id?: string
+          unit_cost?: number | null
         }
         Relationships: [
           {
@@ -637,10 +640,15 @@ export type Database = {
         }
         Returns: string
       }
+      cancel_purchase_order: { Args: { p_po_id: string }; Returns: undefined }
+      cancel_transfer: { Args: { p_transfer_id: string }; Returns: undefined }
       create_organization_with_owner: {
         Args: { p_address?: string; p_name: string; p_rfc?: string }
         Returns: string
       }
+      receive_purchase_order: { Args: { p_po_id: string }; Returns: undefined }
+      receive_transfer: { Args: { p_transfer_id: string }; Returns: undefined }
+      ship_transfer: { Args: { p_transfer_id: string }; Returns: undefined }
       user_organizations: { Args: never; Returns: string[] }
     }
     Enums: {
