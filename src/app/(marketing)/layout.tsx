@@ -51,10 +51,55 @@ export default async function MarketingLayout({
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="border-t">
-        <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 text-xs text-muted-foreground md:px-6">
-          <span>© {new Date().getFullYear()} Restoki</span>
-          <span>Hecho por restauranteros, para restauranteros.</span>
+      <footer className="border-t bg-background">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 text-sm md:grid-cols-3 md:px-6">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 font-semibold">
+              <ChefHat className="size-4 text-primary" />
+              Restoki
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Inventario, compras y transferencias para restaurantes con
+              múltiples sucursales. Hecho en Hermosillo, México.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Producto
+            </h4>
+            <Link
+              href="/#pricing"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Precios
+            </Link>
+            <Link
+              href="/login"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Iniciar sesión
+            </Link>
+          </div>
+          <div className="flex flex-col gap-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Contacto
+            </h4>
+            <a
+              href="mailto:hola@restoki.mx"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              hola@restoki.mx
+            </a>
+            <span className="text-xs text-muted-foreground">
+              Hermosillo, Sonora · México
+            </span>
+          </div>
+        </div>
+        <div className="border-t">
+          <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 text-xs text-muted-foreground md:px-6">
+            <span>© {new Date().getFullYear()} Restoki</span>
+            <span>Hecho por restauranteros, para restauranteros.</span>
+          </div>
         </div>
       </footer>
     </div>
