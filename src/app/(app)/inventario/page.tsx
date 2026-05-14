@@ -1,7 +1,7 @@
 import { Package } from "lucide-react"
 import Link from "next/link"
 
-import { requireOrg } from "@/lib/auth"
+import { getAccessibleLocationIds, requireOrg } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { buttonVariants } from "@/components/ui/button"
 import { PageHeader } from "@/components/page-header"
@@ -29,14 +29,19 @@ export default async function InventarioPage({
 
   const supabase = await createClient()
 
-  const { data: locations } = await supabase
-    .from("locations")
-    .select("id, name")
-    .eq("organization_id", org.id)
-    .eq("is_active", true)
-    .order("created_at", { ascending: true })
+  const [{ data: allLocations }, accessibleIds] = await Promise.all([
+    supabase
+      .from("locations")
+      .select("id, name")
+      .eq("organization_id", org.id)
+      .eq("is_active", true)
+      .order("created_at", { ascending: true }),
+    getAccessibleLocationIds(),
+  ])
 
-  if (!locations || locations.length === 0) {
+  const locations = (allLocations ?? []).filter((l) => accessibleIds.has(l.id))
+
+  if (locations.length === 0) {
     return (
       <div className="flex flex-col gap-6">
         <PageHeader

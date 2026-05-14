@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Barcode } from "lucide-react"
 
-import { requireOrg } from "@/lib/auth"
+import { getAccessibleLocationIds, requireOrg } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
@@ -28,7 +28,7 @@ export default async function EscanerPage() {
   }
 
   const supabase = await createClient()
-  const [locationsRes, productsRes] = await Promise.all([
+  const [locationsRes, productsRes, accessibleIds] = await Promise.all([
     supabase
       .from("locations")
       .select("id, name")
@@ -41,9 +41,12 @@ export default async function EscanerPage() {
       .eq("organization_id", org.id)
       .eq("is_active", true)
       .order("name", { ascending: true }),
+    getAccessibleLocationIds(),
   ])
 
-  const locations = locationsRes.data ?? []
+  const locations = (locationsRes.data ?? []).filter((l) =>
+    accessibleIds.has(l.id)
+  )
   const products = productsRes.data ?? []
 
   if (locations.length === 0) {

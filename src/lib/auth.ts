@@ -89,3 +89,19 @@ export async function requireOrg(): Promise<{ user: User; org: OrgWithRole }> {
   if (!org) redirect("/onboarding")
   return { user, org }
 }
+
+/**
+ * Set de location_ids accesibles por el usuario actual.
+ * Para miembros con location_id NULL (owner/admin/manager) devuelve TODAS
+ * las locations de sus orgs. Para staff scoped, solo su location asignada.
+ *
+ * Útil para filtrar dropdowns de "Sucursal" en pages donde queremos que el
+ * staff solo vea su sucursal. Cacheado por request.
+ */
+export const getAccessibleLocationIds = cache(
+  async (): Promise<Set<string>> => {
+    const supabase = await createClient()
+    const { data } = await supabase.rpc("user_locations")
+    return new Set(data ?? [])
+  }
+)
