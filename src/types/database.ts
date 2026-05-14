@@ -824,6 +824,7 @@ export type Database = {
         Returns: boolean
       }
       user_locations: { Args: never; Returns: string[] }
+      user_location_ids: { Args: never; Returns: string[] }
       accept_invitation: { Args: { p_token: string }; Returns: string }
       peek_invitation: {
         Args: { p_token: string }

@@ -101,7 +101,7 @@ export async function requireOrg(): Promise<{ user: User; org: OrgWithRole }> {
 export const getAccessibleLocationIds = cache(
   async (): Promise<Set<string>> => {
     const supabase = await createClient()
-    const { data } = await supabase.rpc("user_locations")
+    const { data } = await supabase.rpc("user_location_ids")
     return new Set(data ?? [])
   }
 )
