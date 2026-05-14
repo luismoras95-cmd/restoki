@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Restoki</string>
+    <string name="title_activity_main">Restoki</string>
+    <string name="package_name">mx.restoki.app</string>
+    <string name="custom_url_scheme">mx.restoki.app</string>
+</resources>

@@ -1,7 +1,7 @@
 "use client"
 
-import { useRef, useState, useTransition } from "react"
-import { Camera, Loader2, Upload } from "lucide-react"
+import { useEffect, useRef, useState, useTransition } from "react"
+import { Camera, Image as ImageIcon, Loader2, Upload } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import {
   parseTicketImage,
   type ParsedTicket,
 } from "@/lib/actions/ticket-parser"
+import { isNativeApp, takeNativePhoto } from "@/lib/native"
 
 const MAX_MB = 8
 
@@ -28,6 +29,12 @@ export function TicketUploader({ onParsed }: TicketUploaderProps) {
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const [isNative, setIsNative] = useState(false)
+
+  // isNativeApp() solo es válido client-side. Lo evaluamos en effect.
+  useEffect(() => {
+    setIsNative(isNativeApp())
+  }, [])
 
   function handleSelect(selected: File | null) {
     if (!selected) return
@@ -45,6 +52,28 @@ export function TicketUploader({ onParsed }: TicketUploaderProps) {
     const url = URL.createObjectURL(selected)
     setFile(selected)
     setPreviewUrl(url)
+  }
+
+  async function handleNativeCamera() {
+    try {
+      const photo = await takeNativePhoto()
+      if (!photo) return // canceló
+      handleSelect(photo)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error con la cámara"
+      // El usuario cancelando arroja error en algunos plugins; lo ignoramos
+      if (!msg.toLowerCase().includes("cancel")) {
+        toast.error(msg)
+      }
+    }
+  }
+
+  function triggerPicker() {
+    if (isNative) {
+      handleNativeCamera()
+    } else {
+      inputRef.current?.click()
+    }
   }
 
   function handleSubmit() {
@@ -85,6 +114,7 @@ export function TicketUploader({ onParsed }: TicketUploaderProps) {
           ref={inputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp,image/gif"
+          capture="environment"
           className="hidden"
           onChange={(e) => handleSelect(e.target.files?.[0] ?? null)}
         />
@@ -103,7 +133,7 @@ export function TicketUploader({ onParsed }: TicketUploaderProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => inputRef.current?.click()}
+                onClick={triggerPicker}
                 disabled={pending}
               >
                 <Upload className="size-4" />
@@ -132,13 +162,19 @@ export function TicketUploader({ onParsed }: TicketUploaderProps) {
         ) : (
           <button
             type="button"
-            onClick={() => inputRef.current?.click()}
+            onClick={triggerPicker}
             className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed bg-muted/20 px-6 py-12 text-center transition-colors hover:bg-muted/40"
           >
-            <Camera className="size-10 text-muted-foreground" />
+            {isNative ? (
+              <Camera className="size-10 text-muted-foreground" />
+            ) : (
+              <ImageIcon className="size-10 text-muted-foreground" />
+            )}
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium">
-                Click para tomar o subir una foto
+                {isNative
+                  ? "Toma foto o elige de galería"
+                  : "Click para tomar o subir una foto"}
               </span>
               <span className="text-xs text-muted-foreground">
                 JPG, PNG, WEBP o GIF · máx {MAX_MB} MB

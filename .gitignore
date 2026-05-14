@@ -42,3 +42,27 @@ next-env.d.ts
 
 # supabase CLI temp files
 supabase/.temp/
+
+# Capacitor — build artifacts nativos
+# (las carpetas android/ y ios/ SÍ se versionan, pero excluimos lo que
+# se genera al compilar localmente)
+android/.gradle/
+android/.idea/
+android/local.properties
+android/app/build/
+android/build/
+android/captures/
+android/app/release/
+android/app/debug/
+android/keystore*.jks
+android/*.aab
+android/*.apk
+
+ios/App/Pods/
+ios/App/build/
+ios/App/output/
+ios/DerivedData/
+ios/.xcode.env.local
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/

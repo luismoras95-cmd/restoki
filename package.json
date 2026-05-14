@@ -7,11 +7,24 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:types": "supabase gen types typescript --project-id xocxtszlghxeslqnolwr --schema public > src/types/database.ts"
+    "db:types": "supabase gen types typescript --project-id xocxtszlghxeslqnolwr --schema public > src/types/database.ts",
+    "cap:sync": "cap sync",
+    "cap:open:ios": "cap open ios",
+    "cap:open:android": "cap open android",
+    "cap:assets": "capacitor-assets generate --iconBackgroundColor #FFFFFF --iconBackgroundColorDark #FFFFFF --splashBackgroundColor #FFFFFF --splashBackgroundColorDark #FFFFFF"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.2",
     "@base-ui/react": "^1.4.1",
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/camera": "^8.2.0",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/ios": "^8.3.4",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/ssr": "^0.10.3",
@@ -32,6 +45,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
