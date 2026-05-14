@@ -1,11 +1,11 @@
 import Link from "next/link"
 import { ChefHat } from "lucide-react"
 
-import { LoginForm } from "@/components/login-form"
+import { ForgotPasswordForm } from "@/components/forgot-password-form"
 
-export const metadata = { title: "Iniciar sesión" }
+export const metadata = { title: "Recuperar contraseña" }
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center bg-background px-4 py-12">
       <Link
@@ -18,18 +18,18 @@ export default function LoginPage() {
       <div className="w-full max-w-sm rounded-xl border bg-card p-6 shadow-sm">
         <div className="mb-6 flex flex-col gap-1 text-center">
           <h1 className="text-xl font-semibold tracking-tight">
-            Inicia sesión
+            Recupera tu contraseña
           </h1>
           <p className="text-sm text-muted-foreground">
-            Entra a tu cuenta de Restoki.
+            Te enviamos un enlace para crear una nueva.
           </p>
         </div>
-        <LoginForm />
+        <ForgotPasswordForm />
       </div>
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        ¿No tienes cuenta?{" "}
-        <Link href="/signup" className="font-medium text-primary hover:underline">
-          Empieza tu prueba gratis
+        ¿Te acordaste?{" "}
+        <Link href="/login" className="font-medium text-primary hover:underline">
+          Volver a iniciar sesión
         </Link>
       </p>
     </div>

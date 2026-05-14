@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import type { Database } from "@/types/database"
 
-const PUBLIC_PATHS = ["/", "/login"]
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/forgot-password", "/precios"]
 const PUBLIC_PREFIXES = ["/auth/"]
 
 function isPublic(pathname: string): boolean {

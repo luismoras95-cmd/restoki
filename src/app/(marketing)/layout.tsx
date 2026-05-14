@@ -23,6 +23,12 @@ export default async function MarketingLayout({
             <span>Restoki</span>
           </Link>
           <nav className="flex items-center gap-2">
+            <Link
+              href="/precios"
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+            >
+              Precios
+            </Link>
             {user ? (
               <Link
                 href="/dashboard"
@@ -40,10 +46,10 @@ export default async function MarketingLayout({
                   Iniciar sesión
                 </Link>
                 <Link
-                  href="/login"
+                  href="/signup"
                   className={buttonVariants({ size: "sm" })}
                 >
-                  Empezar
+                  Empezar gratis
                 </Link>
               </>
             )}
@@ -68,7 +74,7 @@ export default async function MarketingLayout({
               Producto
             </h4>
             <Link
-              href="/#pricing"
+              href="/precios"
               className="text-muted-foreground hover:text-foreground"
             >
               Precios

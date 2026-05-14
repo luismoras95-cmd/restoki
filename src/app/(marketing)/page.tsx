@@ -15,6 +15,7 @@ import {
 
 import { getCurrentUser } from "@/lib/auth"
 import { buttonVariants } from "@/components/ui/button"
+import { PricingTable } from "@/components/pricing-table"
 import { cn } from "@/lib/utils"
 
 export default async function LandingPage() {
@@ -62,12 +63,12 @@ function Hero({ authed }: { authed: boolean }) {
         ) : (
           <>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Link href="/login" className={buttonVariants({ size: "lg" })}>
+              <Link href="/signup" className={buttonVariants({ size: "lg" })}>
                 Empezar prueba gratuita
                 <ArrowRight className="size-4" />
               </Link>
               <Link
-                href="#pricing"
+                href="/precios"
                 className={buttonVariants({ size: "lg", variant: "outline" })}
               >
                 Ver precios
@@ -214,62 +215,6 @@ function Stat({ value, label }: { value: string; label: string }) {
 // ============================================================
 // PRICING
 // ============================================================
-const PLANS = [
-  {
-    id: "founders",
-    name: "Founders",
-    price: "$19",
-    period: "USD/mes lifetime",
-    description: "Solo primeros 10 clientes. Te ayudo con el setup gratis.",
-    cta: "Solicitar acceso",
-    href: "/login",
-    badge: "Cupos limitados",
-    highlight: false,
-    features: [
-      "Todas las funciones de Pro",
-      "Setup uno a uno conmigo",
-      "Precio congelado de por vida",
-      "Acceso a roadmap privado",
-    ],
-  },
-  {
-    id: "starter",
-    name: "Starter",
-    price: "$39",
-    period: "USD/mes",
-    description: "Para restaurantes que arrancan con 1-2 sucursales.",
-    cta: "Empezar prueba",
-    href: "/login",
-    badge: null,
-    highlight: false,
-    features: [
-      "Hasta 2 sucursales",
-      "3 usuarios",
-      "Inventario, compras, transferencias",
-      "Exportar a CSV",
-      "Soporte por correo",
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "$79",
-    period: "USD/mes",
-    description: "Para cadenas en crecimiento con 3+ sucursales.",
-    cta: "Empezar prueba",
-    href: "/login",
-    badge: "Más popular",
-    highlight: true,
-    features: [
-      "Sucursales ilimitadas",
-      "10 usuarios",
-      "Todo lo de Starter",
-      "Alertas de stock por WhatsApp (próximamente)",
-      "Soporte prioritario",
-    ],
-  },
-] as const
-
 function Pricing({ authed }: { authed: boolean }) {
   return (
     <section id="pricing" className="border-b">
@@ -279,69 +224,11 @@ function Pricing({ authed }: { authed: boolean }) {
             Precios honestos. Sin sorpresas.
           </h2>
           <p className="mt-3 text-muted-foreground">
-            14 días de prueba en cualquier plan. Sin tarjeta de crédito. Si no
-            te sirve, cierras tu cuenta y exportas tus datos en CSV.
+            14 días de prueba en cualquier plan. Sin tarjeta de crédito. Todos
+            los precios incluyen IVA.
           </p>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.id}
-              className={cn(
-                "relative flex flex-col gap-5 rounded-2xl border bg-card p-6",
-                plan.highlight && "border-primary shadow-lg ring-1 ring-primary/30"
-              )}
-            >
-              {plan.badge && (
-                <div
-                  className={cn(
-                    "absolute -top-3 right-6 rounded-full border bg-background px-3 py-1 text-xs font-medium",
-                    plan.highlight
-                      ? "border-primary text-primary"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {plan.badge}
-                </div>
-              )}
-              <div className="flex flex-col gap-1">
-                <h3 className="text-lg font-semibold">{plan.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {plan.description}
-                </p>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold tracking-tight">
-                  {plan.price}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {plan.period}
-                </span>
-              </div>
-              <ul className="flex flex-col gap-2 text-sm">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={authed ? "/dashboard" : plan.href}
-                className={buttonVariants({
-                  variant: plan.highlight ? "default" : "outline",
-                  size: "default",
-                  className: "mt-auto",
-                })}
-              >
-                {authed ? "Ir al dashboard" : plan.cta}
-              </Link>
-            </div>
-          ))}
-        </div>
-        <p className="mt-8 text-center text-xs text-muted-foreground">
-          Precios en USD. Cobro mensual con Stripe. Cancela cuando quieras.
-        </p>
+        <PricingTable authed={authed} />
       </div>
     </section>
   )
@@ -353,15 +240,19 @@ function Pricing({ authed }: { authed: boolean }) {
 const FAQS = [
   {
     q: "¿Necesito tarjeta para empezar la prueba?",
-    a: "No. La prueba de 14 días no pide tarjeta. Si al terminar no te sirve, cierras tu cuenta y exportas tus datos en CSV. Sin compromiso.",
+    a: "No. La prueba de 14 días no pide tarjeta. Si al terminar no te sirve, exportas tus datos en CSV y cierras tu cuenta. Sin compromiso.",
+  },
+  {
+    q: "¿Cuál es la diferencia entre los planes?",
+    a: "Solo es para una sucursal con 3 usuarios. Cadena es para hasta 5 sucursales y 10 usuarios, incluye la IA que lee tickets de proveedor y crea órdenes de compra automáticamente. Enterprise es sucursales y usuarios ilimitados con soporte por WhatsApp directo.",
+  },
+  {
+    q: "¿Cómo funciona la IA de tickets?",
+    a: "Subes una foto del ticket o factura del proveedor desde el celular. En 10-30 segundos la IA lee productos, cantidades, costos y total. Tú revisas, ajustas si hace falta y confirmas. La orden de compra queda creada lista para recibir y actualizar tu inventario con CPP. Solo en plan Cadena y Enterprise.",
   },
   {
     q: "¿Funciona con Soft Restaurant, Loyverse u otro POS?",
-    a: "Por ahora cargas los movimientos manualmente o vía CSV. La integración directa con POS está planeada para 2026 — si tu POS es prioritario, escríbenos y lo subimos en el roadmap.",
-  },
-  {
-    q: "¿Cuántas sucursales y usuarios puedo agregar?",
-    a: "Starter incluye 2 sucursales y 3 usuarios. Pro incluye sucursales y usuarios sin límite práctico (hasta 10 por ahora; suficiente para la mayoría de cadenas medianas). Founders tiene los mismos límites que Pro.",
+    a: "Por ahora cargas los movimientos manualmente o vía CSV. La integración directa con POS está planeada — si tu POS es prioritario, escríbenos y lo subimos en el roadmap.",
   },
   {
     q: "¿Mis datos están seguros?",
@@ -372,16 +263,16 @@ const FAQS = [
     a: "Sí. Cualquier sección (inventario, compras, transferencias, movimientos) exporta a CSV en un click, con filtros de fecha. Tus datos son tuyos.",
   },
   {
-    q: "¿Hay soporte en español?",
-    a: "Todo el sistema, las facturas y el soporte están en español. Restoki está hecho en Hermosillo, México.",
+    q: "¿Los precios incluyen IVA?",
+    a: "Sí, todos los precios en la página de precios incluyen 16% de IVA. Si necesitas factura fiscal con tu RFC, la generamos automáticamente.",
   },
   {
-    q: "¿Soportan facturación electrónica (CFDI)?",
-    a: "Aún no. Restoki es para el control interno de inventario y costos. Para facturar al cliente final usa tu sistema actual (Soft Restaurant, Aspel, etc.). La integración contable está en backlog.",
+    q: "¿Puedo cambiar de plan después?",
+    a: "Sí. En la sección Configuración → Billing puedes upgrade o downgrade en cualquier momento. El cobro se prorrate.",
   },
   {
-    q: "¿Cómo funciona el plan Founders?",
-    a: "Es para los primeros 10 clientes que arranquen con Restoki. $19 USD/mes lifetime — ese precio no sube nunca para ti, aunque mañana suba para el resto. Yo personalmente te ayudo a configurar tu primer mes.",
+    q: "¿Hay descuento si pago anual?",
+    a: "Sí. Pagando anual obtienes 10% de descuento sobre el total. Equivale a 1.2 meses gratis al año.",
   },
 ] as const
 
@@ -444,7 +335,7 @@ function FinalCTA({ authed }: { authed: boolean }) {
             <ArrowRight className="size-4" />
           </Link>
         ) : (
-          <Link href="/login" className={buttonVariants({ size: "lg" })}>
+          <Link href="/signup" className={buttonVariants({ size: "lg" })}>
             Empezar prueba gratuita
             <ArrowRight className="size-4" />
           </Link>

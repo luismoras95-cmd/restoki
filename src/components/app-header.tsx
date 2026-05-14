@@ -10,8 +10,6 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -87,27 +85,29 @@ export function AppHeader({ userEmail }: AppHeaderProps) {
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
-            <DropdownMenuLabel className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-0.5 px-1.5 py-1">
               <span className="text-xs font-normal text-muted-foreground">
                 Conectado como
               </span>
               <span className="truncate text-sm font-medium">{userEmail}</span>
-            </DropdownMenuLabel>
+            </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>
-              <UserIcon className="size-4" />
-              Mi perfil
-            </DropdownMenuItem>
+            <Link
+              href="/configuracion"
+              className="relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground [&_svg]:size-4"
+            >
+              <UserIcon />
+              Configuración
+            </Link>
             <DropdownMenuSeparator />
-            <form action={signOut}>
-              <DropdownMenuItem
-                render={
-                  <button type="submit" className="w-full">
-                    <LogOut className="size-4" />
-                    Cerrar sesión
-                  </button>
-                }
-              />
+            <form action={signOut} className="px-0">
+              <button
+                type="submit"
+                className="relative flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground [&_svg]:size-4"
+              >
+                <LogOut />
+                Cerrar sesión
+              </button>
             </form>
           </DropdownMenuContent>
         </DropdownMenu>
