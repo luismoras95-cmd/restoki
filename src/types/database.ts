@@ -603,6 +603,7 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          billing_cycle: string | null
           created_at: string | null
           current_period_end: string | null
           id: string
@@ -615,6 +616,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          billing_cycle?: string | null
           created_at?: string | null
           current_period_end?: string | null
           id?: string
@@ -627,6 +629,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          billing_cycle?: string | null
           created_at?: string | null
           current_period_end?: string | null
           id?: string
