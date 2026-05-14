@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 
 import { getCurrentOrg, requireUser } from "@/lib/auth"
+import { createClient } from "@/lib/supabase/server"
 import { OnboardingProgress } from "@/components/onboarding/progress"
 import { OrgStep } from "@/components/onboarding/org-step"
 import { LocationsStep } from "@/components/onboarding/locations-step"
@@ -42,6 +43,20 @@ export default async function OnboardingPage({
     : 1
 
   const org = await getCurrentOrg()
+
+  // Si el usuario NO tiene org pero SÍ tiene una invitación pendiente
+  // (porque fue invitado pero se logueó por otra ruta), llévalo a aceptarla
+  // en lugar de mandarlo a crear otra org.
+  if (!org && step === 1) {
+    const supabase = await createClient()
+    const { data: pendingInvitations } = await supabase.rpc(
+      "get_my_pending_invitation"
+    )
+    const pending = pendingInvitations?.[0]
+    if (pending) {
+      redirect(`/auth/accept-invite?token=${pending.token}`)
+    }
+  }
 
   // Pasos 2-4 requieren org. Si no hay, regresa al paso 1.
   if (step >= 2 && !org) {

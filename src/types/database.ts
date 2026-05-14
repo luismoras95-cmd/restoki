@@ -753,6 +753,19 @@ export type Database = {
           created_at: string
         }[]
       }
+      get_my_pending_invitation: {
+        Args: never
+        Returns: {
+          id: string
+          token: string
+          organization_id: string
+          organization_name: string
+          role: Database["public"]["Enums"]["member_role"]
+          location_id: string | null
+          location_name: string | null
+          expires_at: string
+        }[]
+      }
     }
     Enums: {
       member_role: "owner" | "admin" | "manager" | "staff"

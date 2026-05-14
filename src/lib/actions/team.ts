@@ -101,11 +101,14 @@ export async function inviteMember(
     headersList.get("origin") ??
     `https://${headersList.get("host") ?? "restoki.mx"}`
 
-  const acceptPath = `/auth/accept-invite?token=${inv.token}`
+  // Magic link sencillo a /auth/callback. La detección de invitación
+  // pendiente y el redirect a /auth/accept-invite los hace /onboarding
+  // vía get_my_pending_invitation RPC (migration 0009). Esto evita
+  // problemas con redirect_to + query params en Supabase Auth.
   const { error: otpErr } = await supabase.auth.signInWithOtp({
     email: parsed.data.email,
     options: {
-      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(acceptPath)}`,
+      emailRedirectTo: `${origin}/auth/callback`,
       shouldCreateUser: true,
     },
   })
@@ -164,11 +167,10 @@ export async function resendInvitation(invitationId: string) {
     headersList.get("origin") ??
     `https://${headersList.get("host") ?? "restoki.mx"}`
 
-  const acceptPath = `/auth/accept-invite?token=${inv.token}`
   const { error: otpErr } = await supabase.auth.signInWithOtp({
     email: inv.email,
     options: {
-      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(acceptPath)}`,
+      emailRedirectTo: `${origin}/auth/callback`,
       shouldCreateUser: true,
     },
   })
