@@ -43,6 +43,102 @@ export type Database = {
           },
         ]
       }
+      dishes: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          notes: string | null
+          organization_id: string
+          sale_price: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notes?: string | null
+          organization_id: string
+          sale_price?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          sale_price?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dishes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dishes_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dish_ingredients: {
+        Row: {
+          created_at: string | null
+          dish_id: string
+          id: string
+          notes: string | null
+          product_id: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string | null
+          dish_id: string
+          id?: string
+          notes?: string | null
+          product_id: string
+          quantity: number
+        }
+        Update: {
+          created_at?: string | null
+          dish_id?: string
+          id?: string
+          notes?: string | null
+          product_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dish_ingredients_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dish_ingredients_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory: {
         Row: {
           average_cost: number | null
@@ -764,6 +860,40 @@ export type Database = {
           location_id: string | null
           location_name: string | null
           expires_at: string
+        }[]
+      }
+      dish_cost_at_location: {
+        Args: { p_dish_id: string; p_location_id: string }
+        Returns: number
+      }
+      list_dishes_with_costs: {
+        Args: { p_org_id: string; p_location_id: string }
+        Returns: {
+          id: string
+          name: string
+          description: string | null
+          category_id: string | null
+          category_name: string | null
+          sale_price: number | null
+          is_active: boolean
+          ingredient_count: number
+          cost: number
+          margin_amount: number | null
+          margin_pct: number | null
+          updated_at: string
+        }[]
+      }
+      list_dish_ingredients_with_costs: {
+        Args: { p_dish_id: string; p_location_id: string }
+        Returns: {
+          ingredient_id: string
+          product_id: string
+          product_name: string
+          base_unit: string
+          quantity: number
+          unit_cost: number
+          subtotal: number
+          cost_source: string
         }[]
       }
     }
