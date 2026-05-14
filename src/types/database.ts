@@ -201,6 +201,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          location_id: string | null
           organization_id: string
           role: Database["public"]["Enums"]["member_role"]
           user_id: string
@@ -208,6 +209,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          location_id?: string | null
           organization_id: string
           role?: Database["public"]["Enums"]["member_role"]
           user_id: string
@@ -215,6 +217,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          location_id?: string | null
           organization_id?: string
           role?: Database["public"]["Enums"]["member_role"]
           user_id?: string
@@ -225,6 +228,67 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memberships_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          location_id: string | null
+          organization_id: string
+          role: Database["public"]["Enums"]["member_role"]
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          location_id?: string | null
+          organization_id: string
+          role?: Database["public"]["Enums"]["member_role"]
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          location_id?: string | null
+          organization_id?: string
+          role?: Database["public"]["Enums"]["member_role"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -659,6 +723,35 @@ export type Database = {
       receive_transfer: { Args: { p_transfer_id: string }; Returns: undefined }
       ship_transfer: { Args: { p_transfer_id: string }; Returns: undefined }
       user_organizations: { Args: never; Returns: string[] }
+      user_can_access_location: {
+        Args: { p_location_id: string }
+        Returns: boolean
+      }
+      accept_invitation: { Args: { p_token: string }; Returns: string }
+      peek_invitation: {
+        Args: { p_token: string }
+        Returns: {
+          email: string
+          role: Database["public"]["Enums"]["member_role"]
+          organization_id: string
+          organization_name: string
+          location_name: string | null
+          expires_at: string
+          accepted_at: string | null
+        }[]
+      }
+      list_org_members: {
+        Args: { p_org_id: string }
+        Returns: {
+          membership_id: string
+          user_id: string
+          email: string
+          role: Database["public"]["Enums"]["member_role"]
+          location_id: string | null
+          location_name: string | null
+          created_at: string
+        }[]
+      }
     }
     Enums: {
       member_role: "owner" | "admin" | "manager" | "staff"
