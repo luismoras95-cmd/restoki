@@ -5,7 +5,17 @@ import { redirect } from "next/navigation"
 import { z } from "zod"
 
 import { createClient } from "@/lib/supabase/server"
-import { requireOrg } from "@/lib/auth"
+import { getSubscriptionAccess, requireOrg } from "@/lib/auth"
+
+async function assertCanWrite(): Promise<void> {
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    throw new Error(
+      access.reason ??
+        "Tu suscripción no permite editar recetas. Ve a Configuración → Billing."
+    )
+  }
+}
 
 const EDITOR_ROLES = new Set(["owner", "admin", "manager"])
 
@@ -38,6 +48,7 @@ export async function createDish(formData: FormData) {
   if (!EDITOR_ROLES.has(org.role)) {
     throw new Error("Sin permiso para crear platillos.")
   }
+  await assertCanWrite()
 
   const salePriceRaw = formData.get("sale_price")
   const parsed = DishSchema.safeParse({

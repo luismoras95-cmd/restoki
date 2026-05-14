@@ -4,7 +4,17 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { createClient } from "@/lib/supabase/server"
-import { requireOrg } from "@/lib/auth"
+import { getSubscriptionAccess, requireOrg } from "@/lib/auth"
+
+async function assertCanWrite(): Promise<void> {
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    throw new Error(
+      access.reason ??
+        "Tu suscripción no permite mover inventario. Ve a Configuración → Billing."
+    )
+  }
+}
 
 const BarcodeSchema = z
   .string()
@@ -117,6 +127,7 @@ export async function scanAddToInventory(args: {
   if (!OPERATOR_ROLES.has(org.role)) {
     throw new Error("Sin permiso.")
   }
+  await assertCanWrite()
 
   const parsed = ScanAddSchema.safeParse(args)
   if (!parsed.success) {

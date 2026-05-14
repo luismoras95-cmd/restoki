@@ -3,7 +3,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { z } from "zod"
 
-import { requireOrg } from "@/lib/auth"
+import { getSubscriptionAccess, requireOrg } from "@/lib/auth"
 
 const EDITOR_ROLES = new Set(["owner", "admin", "manager"])
 
@@ -107,6 +107,16 @@ export async function parseTicketImage(
   const { org } = await requireOrg()
   if (!EDITOR_ROLES.has(org.role)) {
     return { status: "error", message: "Sin permiso para subir tickets." }
+  }
+
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    return {
+      status: "error",
+      message:
+        access.reason ??
+        "Tu suscripción no permite crear órdenes con IA. Ve a Configuración → Billing.",
+    }
   }
 
   if (!process.env.ANTHROPIC_API_KEY?.trim()) {

@@ -5,7 +5,17 @@ import { redirect } from "next/navigation"
 import { z } from "zod"
 
 import { createClient } from "@/lib/supabase/server"
-import { requireOrg } from "@/lib/auth"
+import { getSubscriptionAccess, requireOrg } from "@/lib/auth"
+
+async function assertCanWrite(): Promise<void> {
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    throw new Error(
+      access.reason ??
+        "Tu suscripción no permite crear órdenes. Ve a Configuración → Billing."
+    )
+  }
+}
 
 const HeaderSchema = z.object({
   location_id: z.string().uuid("Selecciona una sucursal"),
@@ -37,6 +47,7 @@ export async function createDraftPO(formData: FormData) {
   if (!EDITOR_ROLES.has(org.role)) {
     throw new Error("Sin permiso para crear órdenes de compra.")
   }
+  await assertCanWrite()
 
   const parsed = HeaderSchema.safeParse({
     location_id: formData.get("location_id"),
@@ -221,6 +232,7 @@ export async function markPOSent(poId: string) {
 export async function receivePO(poId: string) {
   const { org } = await requireOrg()
   if (!EDITOR_ROLES.has(org.role)) throw new Error("Sin permiso.")
+  await assertCanWrite()
 
   const supabase = await createClient()
   const { error } = await supabase.rpc("receive_purchase_order", {
@@ -274,6 +286,7 @@ export async function createPOFromTicket(input: CreateFromTicketInput) {
   if (!EDITOR_ROLES.has(org.role)) {
     throw new Error("Sin permiso para crear órdenes de compra.")
   }
+  await assertCanWrite()
 
   const parsed = CreateFromTicketSchema.safeParse(input)
   if (!parsed.success) {

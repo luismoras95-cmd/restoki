@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { createClient } from "@/lib/supabase/server"
-import { requireOrg } from "@/lib/auth"
+import { getSubscriptionAccess, requireOrg } from "@/lib/auth"
 
 const AdjustmentSchema = z.object({
   location_id: z.string().uuid("Selecciona una sucursal"),
@@ -42,6 +42,13 @@ export async function applyAdjustment(
   const { org } = await requireOrg()
   if (!OPERATOR_ROLES.has(org.role)) {
     return { status: "error", message: "Sin permiso." }
+  }
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    return {
+      status: "error",
+      message: access.reason ?? "Suscripción inactiva.",
+    }
   }
 
   const parsed = AdjustmentSchema.safeParse({
@@ -83,6 +90,13 @@ export async function applyWaste(
   const { org } = await requireOrg()
   if (!OPERATOR_ROLES.has(org.role)) {
     return { status: "error", message: "Sin permiso." }
+  }
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    return {
+      status: "error",
+      message: access.reason ?? "Suscripción inactiva.",
+    }
   }
 
   const parsed = WasteSchema.safeParse({
