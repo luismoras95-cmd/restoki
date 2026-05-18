@@ -11,7 +11,7 @@
     "cap:sync": "cap sync",
     "cap:open:ios": "cap open ios",
     "cap:open:android": "cap open android",
-    "cap:assets": "capacitor-assets generate --iconBackgroundColor #FFFFFF --iconBackgroundColorDark #FFFFFF --splashBackgroundColor #FFFFFF --splashBackgroundColorDark #FFFFFF"
+    "cap:assets": "capacitor-assets generate --iconBackgroundColor '#FFFFFF' --iconBackgroundColorDark '#FFFFFF' --splashBackgroundColor '#FFFFFF' --splashBackgroundColorDark '#FFFFFF'"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.2",
@@ -53,6 +53,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.18",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
