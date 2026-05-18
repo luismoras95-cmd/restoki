@@ -58,7 +58,7 @@ export default async function MarketingLayout({
       </header>
       <main className="flex-1">{children}</main>
       <footer className="border-t bg-background">
-        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 text-sm md:grid-cols-3 md:px-6">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 text-sm md:grid-cols-4 md:px-6">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 font-semibold">
               <ChefHat className="size-4 text-primary" />
@@ -99,6 +99,23 @@ export default async function MarketingLayout({
             <span className="text-xs text-muted-foreground">
               Hermosillo, Sonora · México
             </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Legal
+            </h4>
+            <Link
+              href="/privacidad"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Privacidad
+            </Link>
+            <Link
+              href="/terminos"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Términos
+            </Link>
           </div>
         </div>
         <div className="border-t">

@@ -63,6 +63,17 @@ export default function SignupPage() {
               Inicia sesión
             </Link>
           </p>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Al crear tu cuenta aceptas nuestros{" "}
+            <Link href="/terminos" className="hover:underline">
+              Términos
+            </Link>{" "}
+            y{" "}
+            <Link href="/privacidad" className="hover:underline">
+              Política de Privacidad
+            </Link>
+            .
+          </p>
         </div>
       </div>
     </div>
