@@ -58,6 +58,10 @@ android/keystore*.jks
 android/*.aab
 android/*.apk
 
+# Keystores de firma (NUNCA subir a git — irreemplazables)
+*.jks
+*.keystore
+
 ios/App/Pods/
 ios/App/build/
 ios/App/output/
