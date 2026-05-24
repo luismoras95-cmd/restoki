@@ -2,6 +2,7 @@ import { requireOrg } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { PageHeader } from "@/components/page-header"
 import { ProductsList } from "@/components/products/products-list"
+import { ImportProductsDialog } from "@/components/products/import-products-dialog"
 
 export const metadata = { title: "Productos" }
 
@@ -78,6 +79,7 @@ export default async function ProductosPage() {
       <PageHeader
         title="Productos"
         description="Catálogo con unidad base, factor de conversión y stock mínimo. Incluye valor de inventario consolidado entre sucursales."
+        action={canEdit ? <ImportProductsDialog /> : null}
       />
       <ProductsList
         products={enrichedProducts}

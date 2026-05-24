@@ -3,9 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Camera, CameraOff } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-
-// Definimos un type mínimo para BarcodeDetector porque TS lib no lo incluye
+// Type mínimo para BarcodeDetector (TS lib no lo incluye)
 type DetectedBarcode = { rawValue: string }
 type BarcodeDetectorCtor = new (options?: { formats?: string[] }) => {
   detect: (
@@ -34,28 +32,62 @@ interface BarcodeScannerProps {
   active: boolean
 }
 
+// Estados de soporte:
+//  "native" → usa BarcodeDetector (rápido, Chrome Android)
+//  "zxing"  → fallback JS (Safari/iOS y otros)
+//  "none"   → no hay cámara disponible
+type Engine = "native" | "zxing" | "none" | null
+
 export function BarcodeScanner({ onDetected, active }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const detectorRef = useRef<InstanceType<BarcodeDetectorCtor> | null>(null)
   const rafRef = useRef<number | null>(null)
+  // Controls para ZXing (BrowserMultiFormatReader.decodeFromVideoDevice)
+  const zxingControlsRef = useRef<{ stop: () => void } | null>(null)
   const lastDetectionRef = useRef<{ code: string; at: number }>({
     code: "",
     at: 0,
   })
 
-  const [supported, setSupported] = useState<boolean | null>(null)
+  const [engine, setEngine] = useState<Engine>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // Decide el motor a usar al montar
   useEffect(() => {
     if (typeof window === "undefined") return
-    setSupported("BarcodeDetector" in window)
+    const hasCamera =
+      typeof navigator !== "undefined" &&
+      !!navigator.mediaDevices &&
+      typeof navigator.mediaDevices.getUserMedia === "function"
+    if (!hasCamera) {
+      setEngine("none")
+      return
+    }
+    setEngine("BarcodeDetector" in window ? "native" : "zxing")
   }, [])
+
+  function emit(code: string) {
+    const now = Date.now()
+    if (
+      code !== lastDetectionRef.current.code ||
+      now - lastDetectionRef.current.at > 1500
+    ) {
+      lastDetectionRef.current = { code, at: now }
+      onDetected(code)
+    }
+  }
 
   const stop = useCallback(() => {
     if (rafRef.current !== null) {
       cancelAnimationFrame(rafRef.current)
       rafRef.current = null
+    }
+    if (zxingControlsRef.current) {
+      try {
+        zxingControlsRef.current.stop()
+      } catch {}
+      zxingControlsRef.current = null
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop())
@@ -66,76 +98,94 @@ export function BarcodeScanner({ onDetected, active }: BarcodeScannerProps) {
     }
   }, [])
 
-  const detectLoop = useCallback(async () => {
+  const detectLoopNative = useCallback(async () => {
     const video = videoRef.current
     const detector = detectorRef.current
     if (!video || !detector || video.readyState < 2) {
-      rafRef.current = requestAnimationFrame(detectLoop)
+      rafRef.current = requestAnimationFrame(detectLoopNative)
       return
     }
     try {
       const results = await detector.detect(video)
-      if (results.length > 0) {
-        const code = results[0].rawValue
-        const now = Date.now()
-        // Anti-rebote: si es el mismo código y han pasado <1.5s, ignora
-        if (
-          code !== lastDetectionRef.current.code ||
-          now - lastDetectionRef.current.at > 1500
-        ) {
-          lastDetectionRef.current = { code, at: now }
-          onDetected(code)
-        }
-      }
+      if (results.length > 0) emit(results[0].rawValue)
     } catch {
-      // ignora errores transitorios del detector
+      // ignora errores transitorios
     }
-    rafRef.current = requestAnimationFrame(detectLoop)
-  }, [onDetected])
+    rafRef.current = requestAnimationFrame(detectLoopNative)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
-    if (!active) {
+    if (!active || engine === null || engine === "none") {
       stop()
       return
     }
-    if (!supported) return
 
     let cancelled = false
     setError(null)
 
     ;(async () => {
       try {
-        const Ctor = window.BarcodeDetector
-        if (!Ctor) {
-          setSupported(false)
-          return
-        }
-        detectorRef.current = new Ctor({ formats: SUPPORTED_FORMATS })
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-        })
-        if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop())
-          return
-        }
-        streamRef.current = stream
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-          await videoRef.current.play()
-          rafRef.current = requestAnimationFrame(detectLoop)
+        if (engine === "native") {
+          const Ctor = window.BarcodeDetector
+          if (!Ctor) {
+            setEngine("zxing")
+            return
+          }
+          detectorRef.current = new Ctor({ formats: SUPPORTED_FORMATS })
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+          })
+          if (cancelled) {
+            stream.getTracks().forEach((t) => t.stop())
+            return
+          }
+          streamRef.current = stream
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream
+            await videoRef.current.play()
+            rafRef.current = requestAnimationFrame(detectLoopNative)
+          }
+        } else if (engine === "zxing") {
+          // Carga ZXing dinámicamente (no infla el bundle principal)
+          const { BrowserMultiFormatReader } = await import("@zxing/browser")
+          const reader = new BrowserMultiFormatReader()
+          if (cancelled || !videoRef.current) return
+          // decodeFromVideoDevice maneja la cámara + el loop de decodificación.
+          // undefined deviceId = cámara trasera por default en móvil.
+          const controls = await reader.decodeFromVideoDevice(
+            undefined,
+            videoRef.current,
+            (result) => {
+              if (result) emit(result.getText())
+            }
+          )
+          if (cancelled) {
+            controls.stop()
+            return
+          }
+          zxingControlsRef.current = controls
         }
       } catch (e) {
         if (cancelled) return
         const msg =
-          e instanceof Error
-            ? e.message
-            : "No se pudo acceder a la cámara"
-        setError(msg)
+          e instanceof Error ? e.message : "No se pudo acceder a la cámara"
+        // Si es problema de permisos, mensaje más claro
+        if (
+          msg.toLowerCase().includes("permission") ||
+          msg.toLowerCase().includes("denied") ||
+          msg.toLowerCase().includes("notallowed")
+        ) {
+          setError(
+            "Permiso de cámara denegado. Habilítalo en los ajustes del navegador."
+          )
+        } else {
+          setError(msg)
+        }
       }
     })()
 
@@ -143,24 +193,24 @@ export function BarcodeScanner({ onDetected, active }: BarcodeScannerProps) {
       cancelled = true
       stop()
     }
-  }, [active, supported, detectLoop, stop])
+  }, [active, engine, detectLoopNative, stop])
 
-  if (supported === false) {
+  if (engine === "none") {
     return (
       <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed bg-muted/20 p-6 text-center">
         <CameraOff className="size-6 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
-          Tu navegador no soporta escaneo con cámara. Usa la entrada manual o
-          un lector USB.
+          No detectamos una cámara disponible. Usa la entrada manual o un lector
+          USB.
         </p>
       </div>
     )
   }
 
-  if (supported === null) {
+  if (engine === null) {
     return (
       <div className="rounded-xl border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
-        Detectando soporte de cámara…
+        Detectando cámara…
       </div>
     )
   }
@@ -171,6 +221,7 @@ export function BarcodeScanner({ onDetected, active }: BarcodeScannerProps) {
         ref={videoRef}
         playsInline
         muted
+        autoPlay
         className="h-full w-full object-cover"
       />
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">

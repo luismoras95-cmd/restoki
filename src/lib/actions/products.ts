@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { createClient } from "@/lib/supabase/server"
-import { requireOrg } from "@/lib/auth"
+import { getSubscriptionAccess, requireOrg } from "@/lib/auth"
+import type { TablesInsert } from "@/types/db"
 
 const BASE_UNITS = ["kg", "g", "l", "ml", "pieza"] as const
 
@@ -177,6 +178,238 @@ export async function updateProduct(
   revalidatePath("/productos")
   revalidatePath("/inventario")
   return { status: "success", message: "Cambios guardados." }
+}
+
+// ============================================================
+// Importación masiva desde CSV/Excel
+// ============================================================
+
+export type ImportProductRow = {
+  nombre: string
+  unidad_base: string
+  categoria?: string
+  costo_estimado?: number | null
+  stock_minimo?: number | null
+  unidad_compra?: string
+  unidades_por_compra?: number | null
+  codigo_barras?: string
+  sku?: string
+}
+
+export type ImportResult = {
+  status: "ok" | "error"
+  created: number
+  skipped: number
+  errors: { row: number; message: string }[]
+  message: string
+}
+
+const UNIT_ALIASES: Record<string, (typeof BASE_UNITS)[number]> = {
+  kg: "kg",
+  kilo: "kg",
+  kilos: "kg",
+  kilogramo: "kg",
+  kilogramos: "kg",
+  g: "g",
+  gr: "g",
+  gramo: "g",
+  gramos: "g",
+  l: "l",
+  lt: "l",
+  litro: "l",
+  litros: "l",
+  ml: "ml",
+  mililitro: "ml",
+  mililitros: "ml",
+  pieza: "pieza",
+  piezas: "pieza",
+  pza: "pieza",
+  pz: "pieza",
+  unidad: "pieza",
+  pieces: "pieza",
+}
+
+function normalizeUnit(raw: string): (typeof BASE_UNITS)[number] | null {
+  const key = raw.trim().toLowerCase()
+  return UNIT_ALIASES[key] ?? null
+}
+
+export async function importProducts(
+  rows: ImportProductRow[]
+): Promise<ImportResult> {
+  const { org } = await requireOrg()
+  if (!EDITOR_ROLES.has(org.role)) {
+    return {
+      status: "error",
+      created: 0,
+      skipped: 0,
+      errors: [],
+      message: "Sin permiso para importar productos.",
+    }
+  }
+
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    return {
+      status: "error",
+      created: 0,
+      skipped: 0,
+      errors: [],
+      message: access.reason ?? "Suscripción inactiva.",
+    }
+  }
+
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return {
+      status: "error",
+      created: 0,
+      skipped: 0,
+      errors: [],
+      message: "No se recibieron filas para importar.",
+    }
+  }
+
+  if (rows.length > 1000) {
+    return {
+      status: "error",
+      created: 0,
+      skipped: 0,
+      errors: [],
+      message: "Máximo 1000 productos por importación. Divide tu archivo.",
+    }
+  }
+
+  const supabase = await createClient()
+
+  // Mapa de categorías existentes (nombre normalizado → id)
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name")
+    .eq("organization_id", org.id)
+  const categoryMap = new Map(
+    (categories ?? []).map((c) => [c.name.trim().toLowerCase(), c.id])
+  )
+
+  // SKUs y nombres existentes para evitar duplicados
+  const { data: existing } = await supabase
+    .from("products")
+    .select("name, sku")
+    .eq("organization_id", org.id)
+  const existingNames = new Set(
+    (existing ?? []).map((p) => p.name.trim().toLowerCase())
+  )
+  const existingSkus = new Set(
+    (existing ?? []).map((p) => (p.sku ?? "").trim().toLowerCase()).filter(Boolean)
+  )
+
+  const errors: { row: number; message: string }[] = []
+  const toInsert: TablesInsert<"products">[] = []
+  let autoSkuCounter = (existing?.length ?? 0) + 1
+
+  rows.forEach((row, i) => {
+    const rowNum = i + 2 // +2 porque fila 1 es header y los humanos cuentan desde 1
+    const name = (row.nombre ?? "").trim()
+
+    if (!name || name.length < 2) {
+      errors.push({ row: rowNum, message: "Nombre vacío o muy corto" })
+      return
+    }
+    if (existingNames.has(name.toLowerCase())) {
+      errors.push({ row: rowNum, message: `"${name}" ya existe, se omite` })
+      return
+    }
+
+    const unit = normalizeUnit(row.unidad_base ?? "")
+    if (!unit) {
+      errors.push({
+        row: rowNum,
+        message: `Unidad "${row.unidad_base}" no válida (usa kg, g, l, ml o pieza)`,
+      })
+      return
+    }
+
+    // SKU: usar el del archivo o autogenerar
+    let sku = (row.sku ?? "").trim()
+    if (sku && existingSkus.has(sku.toLowerCase())) {
+      errors.push({ row: rowNum, message: `SKU "${sku}" duplicado, se omite` })
+      return
+    }
+    if (!sku) {
+      sku = `P-${String(autoSkuCounter).padStart(4, "0")}`
+      autoSkuCounter++
+    }
+
+    // Categoría: match por nombre si viene
+    let categoryId: string | null = null
+    if (row.categoria && row.categoria.trim()) {
+      categoryId = categoryMap.get(row.categoria.trim().toLowerCase()) ?? null
+    }
+
+    const cost =
+      row.costo_estimado != null && Number.isFinite(row.costo_estimado)
+        ? Number(row.costo_estimado)
+        : null
+    const minStock =
+      row.stock_minimo != null && Number.isFinite(row.stock_minimo)
+        ? Number(row.stock_minimo)
+        : 0
+    const unitsPerPurchase =
+      row.unidades_por_compra != null &&
+      Number.isFinite(row.unidades_por_compra) &&
+      Number(row.unidades_por_compra) > 0
+        ? Number(row.unidades_por_compra)
+        : null
+
+    // Marca nombre/sku como usados para detectar duplicados DENTRO del archivo
+    existingNames.add(name.toLowerCase())
+    existingSkus.add(sku.toLowerCase())
+
+    toInsert.push({
+      organization_id: org.id,
+      name,
+      sku,
+      base_unit: unit,
+      category_id: categoryId,
+      default_cost: cost,
+      min_stock: minStock,
+      purchase_unit: (row.unidad_compra ?? "").trim() || null,
+      units_per_purchase: unitsPerPurchase,
+      barcode: (row.codigo_barras ?? "").trim() || null,
+    })
+  })
+
+  let created = 0
+  if (toInsert.length > 0) {
+    // Insertar en lotes de 200 para no exceder límites
+    for (let i = 0; i < toInsert.length; i += 200) {
+      const batch = toInsert.slice(i, i + 200)
+      const { error } = await supabase.from("products").insert(batch)
+      if (error) {
+        return {
+          status: "error",
+          created,
+          skipped: errors.length,
+          errors,
+          message: `Error al insertar: ${error.message}`,
+        }
+      }
+      created += batch.length
+    }
+  }
+
+  revalidatePath("/productos")
+  revalidatePath("/inventario")
+
+  return {
+    status: "ok",
+    created,
+    skipped: errors.length,
+    errors,
+    message:
+      created > 0
+        ? `${created} productos importados.${errors.length > 0 ? ` ${errors.length} omitidos (ver detalle).` : ""}`
+        : "Ningún producto importado. Revisa los errores.",
+  }
 }
 
 export async function toggleProductActive(id: string, isActive: boolean) {
