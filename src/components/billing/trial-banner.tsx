@@ -1,8 +1,12 @@
+"use client"
+
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { AlertCircle, ArrowRight, Clock, XCircle } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { isNativeApp } from "@/lib/native"
 import type { SubscriptionAccess } from "@/lib/auth"
 
 interface TrialBannerProps {
@@ -11,10 +15,18 @@ interface TrialBannerProps {
 }
 
 export function TrialBanner({ access, canManageBilling }: TrialBannerProps) {
+  // En la app nativa (iOS/Android) NO mostramos CTAs que lleven a un
+  // checkout/pago — las tiendas lo prohíben para suscripciones digitales.
+  // Mostramos un mensaje informativo para gestionar en la web.
+  const [native, setNative] = useState(false)
+  useEffect(() => {
+    setNative(isNativeApp())
+  }, [])
+
   // Sin banner si la suscripción está activa
   if (access.status === "active") return null
 
-  // Suscripción cancelada o sin acceso de escritura
+  // Suscripción sin acceso de escritura (trial expirado, cancelada, etc.)
   if (!access.canWrite) {
     return (
       <div className="flex items-start gap-3 border-b border-destructive/30 bg-destructive/10 px-4 py-3 text-sm md:px-6">
@@ -30,11 +42,13 @@ export function TrialBanner({ access, canManageBilling }: TrialBannerProps) {
                   : "Suscripción inactiva"}
           </p>
           <p className="text-xs text-muted-foreground">
-            {access.reason ??
-              "Necesitas un plan activo para crear, modificar o recibir órdenes. Puedes seguir viendo tu información."}
+            {native
+              ? "Para activar tu plan, entra a restoki.mx desde tu navegador. Aquí puedes seguir viendo tu información."
+              : (access.reason ??
+                "Necesitas un plan activo para crear, modificar o recibir órdenes. Puedes seguir viendo tu información.")}
           </p>
         </div>
-        {canManageBilling && (
+        {canManageBilling && !native && (
           <Link
             href="/configuracion?tab=billing"
             className={buttonVariants({ size: "sm" })}
@@ -47,7 +61,7 @@ export function TrialBanner({ access, canManageBilling }: TrialBannerProps) {
     )
   }
 
-  // En trial — mostrar countdown con tono según urgencia
+  // En trial vigente
   if (access.status === "trialing" && access.trialDaysLeft !== null) {
     const days = access.trialDaysLeft
     const urgent = days <= 3
@@ -69,9 +83,7 @@ export function TrialBanner({ access, canManageBilling }: TrialBannerProps) {
         <p
           className={cn(
             "flex-1 text-xs",
-            urgent
-              ? "text-amber-700 dark:text-amber-400"
-              : "text-foreground"
+            urgent ? "text-amber-700 dark:text-amber-400" : "text-foreground"
           )}
         >
           <span className="font-medium">
@@ -83,10 +95,12 @@ export function TrialBanner({ access, canManageBilling }: TrialBannerProps) {
           </span>
           {" — "}
           <span className="text-muted-foreground">
-            agrega un plan antes para no perder acceso de escritura.
+            {native
+              ? "elige un plan en restoki.mx para no perder acceso."
+              : "agrega un plan antes para no perder acceso de escritura."}
           </span>
         </p>
-        {canManageBilling && (
+        {canManageBilling && !native && (
           <Link
             href="/configuracion?tab=billing"
             className={cn(
@@ -110,10 +124,12 @@ export function TrialBanner({ access, canManageBilling }: TrialBannerProps) {
         <p className="flex-1 text-xs text-amber-700 dark:text-amber-400">
           <span className="font-medium">Tu último cobro falló.</span>{" "}
           <span className="text-muted-foreground">
-            Actualiza tu tarjeta antes de que se suspenda el servicio.
+            {native
+              ? "Actualiza tu tarjeta en restoki.mx desde tu navegador."
+              : "Actualiza tu tarjeta antes de que se suspenda el servicio."}
           </span>
         </p>
-        {canManageBilling && (
+        {canManageBilling && !native && (
           <Link
             href="/configuracion?tab=billing"
             className="text-xs font-medium text-amber-700 hover:underline dark:text-amber-400"

@@ -1,7 +1,7 @@
 "use client"
 
-import { useTransition } from "react"
-import { ArrowRight, CreditCard, ExternalLink, Loader2, Sparkles } from "lucide-react"
+import { useEffect, useState, useTransition } from "react"
+import { ArrowRight, CreditCard, ExternalLink, Globe, Loader2, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 
 import { openBillingPortal, startCheckout } from "@/lib/actions/billing"
@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { PricingTable } from "@/components/pricing-table"
+import { isNativeApp } from "@/lib/native"
 import { cn } from "@/lib/utils"
 import {
   PLANS,
@@ -68,6 +69,14 @@ interface BillingTabProps {
 }
 
 export function BillingTab({ subscription, canManage }: BillingTabProps) {
+  // En la app nativa NO se puede mostrar checkout/portal de pago (las
+  // tiendas lo prohíben). Solo lectura del estado + mensaje para gestionar
+  // en la web.
+  const [native, setNative] = useState(false)
+  useEffect(() => {
+    setNative(isNativeApp())
+  }, [])
+
   const status = subscription?.status ?? "trialing"
   const statusInfo = STATUS_LABEL[status] ?? STATUS_LABEL.trialing!
   const isTrialing = status === "trialing"
@@ -152,7 +161,7 @@ export function BillingTab({ subscription, canManage }: BillingTabProps) {
                 )}
               </CardDescription>
             </div>
-            {canManage && hasActiveSubscription && (
+            {canManage && hasActiveSubscription && !native && (
               <form action={openBillingPortal}>
                 <Button type="submit" variant="outline">
                   <ExternalLink className="size-4" />
@@ -164,38 +173,69 @@ export function BillingTab({ subscription, canManage }: BillingTabProps) {
         </CardHeader>
       </Card>
 
-      {/* Plan picker */}
-      {canManage && (
+      {/* En la app nativa: NO checkout. Mensaje para gestionar en la web. */}
+      {native ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              {currentPlan ? "Cambiar de plan" : "Elige tu plan"}
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Globe className="size-4" />
+              Gestiona tu suscripción en la web
             </CardTitle>
             <CardDescription>
-              {currentPlan
-                ? "El cambio se aplica de inmediato. Stripe prorrate el costo."
-                : "Elige el plan que mejor se ajuste a tu operación. Puedes cambiar después."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <PlanPickerInline currentPlan={currentPlan?.code ?? null} />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Full pricing view at the bottom for users without a plan */}
-      {!currentPlan && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Detalle de los planes</CardTitle>
-            <CardDescription>
-              Click en cualquier plan para empezar el checkout con tarjeta.
+              Para elegir o cambiar tu plan, actualizar tu método de pago o ver
+              tus facturas, entra a{" "}
+              <span className="font-medium text-foreground">restoki.mx</span>{" "}
+              desde el navegador de tu computadora o celular. Tu suscripción se
+              gestiona fuera de la app.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <PricingTable authed defaultCycle="monthly" />
+            <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+              Inicia sesión en{" "}
+              <span className="font-medium text-foreground">restoki.mx</span>{" "}
+              con el mismo correo y contraseña que usas aquí. Todo tu inventario
+              y datos son los mismos.
+            </div>
           </CardContent>
         </Card>
+      ) : (
+        <>
+          {/* Plan picker (solo web) */}
+          {canManage && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  {currentPlan ? "Cambiar de plan" : "Elige tu plan"}
+                </CardTitle>
+                <CardDescription>
+                  {currentPlan
+                    ? "El cambio se aplica de inmediato. Stripe prorrate el costo."
+                    : "Elige el plan que mejor se ajuste a tu operación. Puedes cambiar después."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <PlanPickerInline currentPlan={currentPlan?.code ?? null} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Detalle de planes para users sin plan (solo web) */}
+          {!currentPlan && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Detalle de los planes
+                </CardTitle>
+                <CardDescription>
+                  Click en cualquier plan para empezar el checkout con tarjeta.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PricingTable authed defaultCycle="monthly" />
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   )
