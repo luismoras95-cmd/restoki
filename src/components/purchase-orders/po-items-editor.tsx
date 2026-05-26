@@ -13,13 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { ProductPicker } from "@/components/purchase-orders/product-picker"
 import {
   Table,
   TableBody,
@@ -114,9 +108,6 @@ export function POItemsEditor({
     }
   }
 
-  const productMap = new Map(products.map((p) => [p.id, p]))
-  const selectedProduct = productId ? productMap.get(productId) : null
-
   const subtotal = items.reduce(
     (sum, it) => sum + Number(it.quantity) * Number(it.unit_cost),
     0
@@ -205,29 +196,14 @@ export function POItemsEditor({
               <Label htmlFor="po-item-product" className="text-xs">
                 Producto
               </Label>
-              <Select
-                name="product_id"
+              <ProductPicker
+                id="po-item-product"
+                products={products}
                 value={productId}
                 onValueChange={handleProductChange}
-              >
-                <SelectTrigger id="po-item-product" className="w-full">
-                  <SelectValue>
-                    {selectedProduct?.name ?? "Selecciona producto"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name} ({p.base_unit})
-                      {p.default_cost != null && (
-                        <span className="ml-1 text-xs text-muted-foreground">
-                          · {currency.format(Number(p.default_cost))}
-                        </span>
-                      )}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
+              {/* El form lee product_id por name; el picker actualiza el state */}
+              <input type="hidden" name="product_id" value={productId} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="po-item-qty" className="text-xs">
