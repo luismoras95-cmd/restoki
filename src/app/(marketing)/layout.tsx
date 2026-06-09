@@ -116,6 +116,12 @@ export default async function MarketingLayout({
             >
               Términos
             </Link>
+            <Link
+              href="/aviso-de-privacidad"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Aviso de Privacidad
+            </Link>
           </div>
         </div>
         <div className="border-t">
