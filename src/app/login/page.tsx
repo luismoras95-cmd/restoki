@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ChefHat } from "lucide-react"
 
 import { LoginForm } from "@/components/login-form"
+import { WebOnly } from "@/components/web-only"
 
 export const metadata = { title: "Iniciar sesión" }
 
@@ -26,12 +27,17 @@ export default function LoginPage() {
         </div>
         <LoginForm />
       </div>
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        ¿No tienes cuenta?{" "}
-        <Link href="/signup" className="font-medium text-primary hover:underline">
-          Empieza tu prueba gratis
-        </Link>
-      </p>
+      <WebOnly>
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          ¿No tienes cuenta?{" "}
+          <Link
+            href="/signup"
+            className="font-medium text-primary hover:underline"
+          >
+            Empieza tu prueba gratis
+          </Link>
+        </p>
+      </WebOnly>
     </div>
   )
 }

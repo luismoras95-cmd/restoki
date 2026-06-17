@@ -1,8 +1,9 @@
 import Link from "next/link"
-import { ChefHat, ArrowRight } from "lucide-react"
+import { ChefHat } from "lucide-react"
 
 import { getCurrentUser } from "@/lib/auth"
-import { buttonVariants } from "@/components/ui/button"
+import { MarketingNav } from "@/components/marketing-nav"
+import { WebOnly } from "@/components/web-only"
 
 export default async function MarketingLayout({
   children,
@@ -22,38 +23,7 @@ export default async function MarketingLayout({
             <ChefHat className="size-5 text-primary" />
             <span>Restoki</span>
           </Link>
-          <nav className="flex items-center gap-2">
-            <Link
-              href="/precios"
-              className={buttonVariants({ variant: "ghost", size: "sm" })}
-            >
-              Precios
-            </Link>
-            {user ? (
-              <Link
-                href="/dashboard"
-                className={buttonVariants({ size: "sm" })}
-              >
-                Ir al dashboard
-                <ArrowRight className="size-4" />
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className={buttonVariants({ variant: "ghost", size: "sm" })}
-                >
-                  Iniciar sesión
-                </Link>
-                <Link
-                  href="/signup"
-                  className={buttonVariants({ size: "sm" })}
-                >
-                  Empezar gratis
-                </Link>
-              </>
-            )}
-          </nav>
+          <MarketingNav authed={!!user} />
         </div>
       </header>
       <main className="flex-1">{children}</main>
@@ -73,12 +43,14 @@ export default async function MarketingLayout({
             <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Producto
             </h4>
-            <Link
-              href="/precios"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              Precios
-            </Link>
+            <WebOnly>
+              <Link
+                href="/precios"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Precios
+              </Link>
+            </WebOnly>
             <Link
               href="/login"
               className="text-muted-foreground hover:text-foreground"

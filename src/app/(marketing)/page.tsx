@@ -16,20 +16,21 @@ import {
 import { getCurrentUser } from "@/lib/auth"
 import { buttonVariants } from "@/components/ui/button"
 import { PricingTable } from "@/components/pricing-table"
+import { NativeAuthGate } from "@/components/native-auth-gate"
 import { cn } from "@/lib/utils"
 
 export default async function LandingPage() {
   const user = await getCurrentUser()
 
   return (
-    <>
+    <NativeAuthGate to={user ? "/dashboard" : "/login"}>
       <Hero authed={!!user} />
       <Features />
       <CaseStudy />
       <Pricing authed={!!user} />
       <FAQ />
       <FinalCTA authed={!!user} />
-    </>
+    </NativeAuthGate>
   )
 }
 

@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ChefHat, Check } from "lucide-react"
 
 import { SignupForm } from "@/components/signup-form"
+import { NativeAuthGate } from "@/components/native-auth-gate"
 
 export const metadata = { title: "Crear cuenta" }
 
@@ -15,6 +16,7 @@ const PERKS = [
 
 export default function SignupPage() {
   return (
+    <NativeAuthGate>
     <div className="flex min-h-svh flex-col items-center justify-center bg-background px-4 py-12">
       <Link
         href="/"
@@ -77,5 +79,6 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+    </NativeAuthGate>
   )
 }
