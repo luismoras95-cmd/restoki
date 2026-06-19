@@ -1,10 +1,13 @@
 "use server"
 
+import { randomInt } from "node:crypto"
+
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { z } from "zod"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { requireOrg } from "@/lib/auth"
 
 const EDITOR_ROLES = new Set(["owner", "admin"])
@@ -24,13 +27,38 @@ const UpdateSchema = z.object({
 export type TeamActionState =
   | { status: "idle" }
   | { status: "success"; message: string }
+  | { status: "created"; email: string; tempPassword: string; message: string }
   | { status: "error"; message: string }
+
+// Genera una contraseña temporal legible y segura (12 chars), evitando
+// caracteres ambiguos (0/O, 1/l/I, etc.) para que sea fácil de dictar.
+function generateTempPassword(length = 12): string {
+  // Sets sin caracteres ambiguos (0/O, 1/l/I) para dictar fácil.
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ"
+  const lower = "abcdefghijkmnpqrstuvwxyz"
+  const digits = "23456789"
+  const all = upper + lower + digits
+  const pick = (set: string) => set[randomInt(set.length)]
+  // Garantiza al menos 1 mayúscula, 1 minúscula y 1 dígito (cumple
+  // cualquier política de "letras y números").
+  const required = [pick(upper), pick(lower), pick(digits)]
+  const rest = Array.from({ length: Math.max(0, length - required.length) }, () =>
+    pick(all)
+  )
+  const out = [...required, ...rest]
+  // Mezcla (Fisher-Yates) para que los obligatorios no queden al inicio.
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1)
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out.join("")
+}
 
 export async function inviteMember(
   _prev: TeamActionState,
   formData: FormData
 ): Promise<TeamActionState> {
-  const { org, user } = await requireOrg()
+  const { org } = await requireOrg()
   if (!EDITOR_ROLES.has(org.role)) {
     return { status: "error", message: "Solo dueños y admins pueden invitar." }
   }
@@ -71,59 +99,64 @@ export async function inviteMember(
     }
   }
 
-  const { data: inv, error: invErr } = await supabase
-    .from("invitations")
-    .insert({
-      organization_id: org.id,
-      email: parsed.data.email,
-      role: parsed.data.role,
-      location_id: parsed.data.location_id,
-      invited_by: user.id,
-    })
-    .select("token")
-    .single()
+  // Nuevo flujo: el dueño crea la cuenta del colaborador con una contraseña
+  // temporal que ve en pantalla y le comparte. No depende de email.
+  const admin = createAdminClient()
+  const tempPassword = generateTempPassword()
 
-  if (invErr || !inv) {
-    if (invErr?.code === "23505") {
+  const { data: created, error: createErr } = await admin.auth.admin.createUser(
+    {
+      email: parsed.data.email,
+      password: tempPassword,
+      email_confirm: true,
+    }
+  )
+
+  if (createErr || !created?.user) {
+    const msg = (createErr?.message ?? "").toLowerCase()
+    if (
+      msg.includes("already been registered") ||
+      msg.includes("already exists") ||
+      msg.includes("already registered")
+    ) {
       return {
         status: "error",
-        message: "Ya hay una invitación pendiente para este correo.",
+        message:
+          "Ese correo ya tiene una cuenta en Restoki. Pídele que inicie sesión, o usa otro correo.",
       }
     }
     return {
       status: "error",
-      message: invErr?.message ?? "No se pudo crear la invitación.",
+      message: createErr?.message ?? "No se pudo crear la cuenta.",
     }
   }
 
-  const headersList = await headers()
-  const origin =
-    headersList.get("origin") ??
-    `https://${headersList.get("host") ?? "restoki.mx"}`
-
-  // Magic link sencillo a /auth/callback. La detección de invitación
-  // pendiente y el redirect a /auth/accept-invite los hace /onboarding
-  // vía get_my_pending_invitation RPC (migration 0009). Esto evita
-  // problemas con redirect_to + query params en Supabase Auth.
-  const { error: otpErr } = await supabase.auth.signInWithOtp({
-    email: parsed.data.email,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback`,
-      shouldCreateUser: true,
-    },
+  const { error: membershipErr } = await admin.from("memberships").insert({
+    organization_id: org.id,
+    user_id: created.user.id,
+    role: parsed.data.role,
+    location_id: parsed.data.location_id,
   })
 
-  if (otpErr) {
+  if (membershipErr) {
+    if (membershipErr.code === "23505") {
+      return {
+        status: "error",
+        message: "Ese usuario ya es miembro de esta organización.",
+      }
+    }
     return {
       status: "error",
-      message: `Invitación creada pero falló el envío de email: ${otpErr.message}`,
+      message: membershipErr.message ?? "No se pudo agregar el miembro.",
     }
   }
 
   revalidatePath("/configuracion")
   return {
-    status: "success",
-    message: `Invitación enviada a ${parsed.data.email}.`,
+    status: "created",
+    email: parsed.data.email,
+    tempPassword,
+    message: `Cuenta creada para ${parsed.data.email}.`,
   }
 }
 

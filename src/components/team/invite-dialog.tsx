@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react"
 import { useFormStatus } from "react-dom"
 import { toast } from "sonner"
+import { Check, Copy } from "lucide-react"
 
 import { inviteMember, type TeamActionState } from "@/lib/actions/team"
 import { Button } from "@/components/ui/button"
@@ -57,8 +58,44 @@ function SubmitButton() {
   const { pending } = useFormStatus()
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "Enviando..." : "Enviar invitación"}
+      {pending ? "Creando cuenta..." : "Crear cuenta"}
     </Button>
+  )
+}
+
+function CopyField({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error("No se pudo copiar. Cópialo manualmente.")
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <div className="flex items-center gap-2">
+        <Input readOnly value={value} className="font-mono" />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={handleCopy}
+          aria-label={`Copiar ${label.toLowerCase()}`}
+        >
+          {copied ? (
+            <Check className="size-4 text-emerald-600" />
+          ) : (
+            <Copy className="size-4" />
+          )}
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -72,12 +109,21 @@ export function InviteDialog({
   const [role, setRole] = useState<Role>("staff")
   const [locationId, setLocationId] = useState<string>(locations[0]?.id ?? "")
   const [email, setEmail] = useState("")
+  // Las credenciales solo se muestran justo después de crearlas. Al cerrar el
+  // panel marcamos "acknowledged" para no reabrirlas (el state de la acción
+  // persiste por useActionState).
+  const [acknowledged, setAcknowledged] = useState(false)
 
   useEffect(() => {
     if (state.status === "success") {
       toast.success(state.message)
       setEmail("")
       onOpenChange(false)
+    } else if (state.status === "created") {
+      toast.success(state.message)
+      setAcknowledged(false)
+      setEmail("")
+      // No cerramos el diálogo: el dueño debe copiar las credenciales.
     } else if (state.status === "error") {
       toast.error(state.message)
     }
@@ -93,16 +139,46 @@ export function InviteDialog({
       ? ROLE_OPTIONS
       : ROLE_OPTIONS.filter((r) => r.value !== "admin")
 
+  const created = state.status === "created" && !acknowledged ? state : null
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Invitar miembro</DialogTitle>
+          <DialogTitle>
+            {created ? "Cuenta creada" : "Agregar miembro"}
+          </DialogTitle>
           <DialogDescription>
-            Le mandaremos un magic link por email. Al abrirlo se loguea y queda
-            agregado automáticamente al equipo.
+            {created
+              ? "Comparte estas credenciales con tu colaborador. Esta contraseña no se volverá a mostrar."
+              : "Le crearemos una cuenta con una contraseña temporal que verás en pantalla para que se la compartas. No depende de correos."}
           </DialogDescription>
         </DialogHeader>
+
+        {created ? (
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+              <CopyField label="Correo" value={created.email} />
+              <CopyField label="Contraseña temporal" value={created.tempPassword} />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Tu colaborador podrá iniciar sesión con su correo y esta
+              contraseña, y cambiarla después. Esta contraseña no se volverá a
+              mostrar, así que cópiala ahora.
+            </p>
+            <div className="flex justify-end pt-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  setAcknowledged(true)
+                  onOpenChange(false)
+                }}
+              >
+                Listo
+              </Button>
+            </div>
+          </div>
+        ) : (
         <form action={formAction} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="invite-email">Correo *</Label>
@@ -186,6 +262,7 @@ export function InviteDialog({
             <SubmitButton />
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   )

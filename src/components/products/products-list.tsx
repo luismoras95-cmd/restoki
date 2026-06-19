@@ -1,14 +1,23 @@
 "use client"
 
 import { useMemo, useState, useTransition } from "react"
-import { Plus, Pencil, Power, Search, Box } from "lucide-react"
+import { Plus, Pencil, Power, Search, Box, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
-import { toggleProductActive } from "@/lib/actions/products"
+import { deleteProduct, toggleProductActive } from "@/lib/actions/products"
 import { EmptyState } from "@/components/empty-state"
 import { ProductForm } from "@/components/products/product-form"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
   Sheet,
@@ -65,6 +74,8 @@ export function ProductsList({
   const [busyId, setBusyId] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
   const [query, setQuery] = useState("")
+  const [toDelete, setToDelete] = useState<Tables<"products"> | null>(null)
+  const [deleting, startDeleteTransition] = useTransition()
 
   const filtered = useMemo(() => {
     if (!query.trim()) return products
@@ -93,6 +104,20 @@ export function ProductsList({
         toast.error(e instanceof Error ? e.message : "Error desconocido")
       } finally {
         setBusyId(null)
+      }
+    })
+  }
+
+  function confirmDelete() {
+    if (!toDelete) return
+    const product = toDelete
+    startDeleteTransition(async () => {
+      try {
+        await deleteProduct(product.id)
+        toast.success("Producto eliminado definitivamente.")
+        setToDelete(null)
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Error desconocido")
       }
     })
   }
@@ -259,6 +284,15 @@ export function ProductsList({
                             >
                               <Power className="size-3.5" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label="Eliminar definitivamente"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setToDelete(p)}
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
                           </div>
                         </TableCell>
                       )}
@@ -283,6 +317,42 @@ export function ProductsList({
           </Table>
         </div>
       )}
+
+      <Dialog
+        open={toDelete !== null}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setToDelete(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar producto definitivamente</DialogTitle>
+            <DialogDescription>
+              {toDelete ? (
+                <>
+                  Vas a eliminar <strong>{toDelete.name}</strong> de forma
+                  PERMANENTE. Esto borra también su inventario y su historial de
+                  movimientos. Esta acción no se puede deshacer.
+                </>
+              ) : null}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose
+              render={<Button variant="outline" disabled={deleting} />}
+            >
+              Cancelar
+            </DialogClose>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={confirmDelete}
+            >
+              {deleting ? "Eliminando…" : "Eliminar definitivamente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

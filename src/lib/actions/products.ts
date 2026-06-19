@@ -430,3 +430,72 @@ export async function toggleProductActive(id: string, isActive: boolean) {
   revalidatePath("/productos")
   revalidatePath("/inventario")
 }
+
+const PRODUCT_IN_USE_MESSAGE =
+  "No se puede eliminar: el producto está en compras, transferencias o recetas. Solo puedes apagarlo."
+
+/**
+ * Elimina un producto de forma PERMANENTE.
+ *
+ * Seguridad: si el producto está referenciado en compras
+ * (purchase_order_items), transferencias (transfer_items) o recetas
+ * (dish_ingredients) —todas con FK ON DELETE RESTRICT— NO se permite borrar y
+ * se devuelve un mensaje claro.
+ *
+ * Si no está en esos, el borrado procede; en cascada se elimina también su
+ * inventario (inventory) y su bitácora de movimientos (inventory_movements).
+ * Esa advertencia se muestra en el diálogo de confirmación de la UI.
+ */
+export async function deleteProduct(id: string) {
+  const { org } = await requireOrg()
+  if (!EDITOR_ROLES.has(org.role)) {
+    throw new Error("Sin permiso para eliminar productos.")
+  }
+
+  const supabase = await createClient()
+
+  // Verifica referencias bloqueantes (FK ON DELETE RESTRICT).
+  const [purchases, transfers, recipes] = await Promise.all([
+    supabase
+      .from("purchase_order_items")
+      .select("id", { count: "exact", head: true })
+      .eq("product_id", id),
+    supabase
+      .from("transfer_items")
+      .select("id", { count: "exact", head: true })
+      .eq("product_id", id),
+    supabase
+      .from("dish_ingredients")
+      .select("id", { count: "exact", head: true })
+      .eq("product_id", id),
+  ])
+
+  const blockers: string[] = []
+  if ((purchases.count ?? 0) > 0) blockers.push("compras")
+  if ((transfers.count ?? 0) > 0) blockers.push("transferencias")
+  if ((recipes.count ?? 0) > 0) blockers.push("recetas")
+
+  if (blockers.length > 0) {
+    throw new Error(
+      `No se puede eliminar: el producto está en ${blockers.join(", ")}. Solo puedes apagarlo.`
+    )
+  }
+
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", id)
+    .eq("organization_id", org.id)
+
+  if (error) {
+    // Respaldo: si una FK RESTRICT falla (race condition), devuelve el mismo
+    // mensaje amigable en lugar del error técnico de Postgres.
+    if (error.code === "23503") {
+      throw new Error(PRODUCT_IN_USE_MESSAGE)
+    }
+    throw new Error(error.message)
+  }
+
+  revalidatePath("/productos")
+  revalidatePath("/inventario")
+}
