@@ -601,6 +601,108 @@ export type Database = {
           },
         ]
       }
+      sales_report_items: {
+        Row: {
+          created_at: string | null
+          dish_id: string
+          dish_name: string
+          id: string
+          quantity: number
+          report_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dish_id: string
+          dish_name: string
+          id?: string
+          quantity: number
+          report_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dish_id?: string
+          dish_name?: string
+          id?: string
+          quantity?: number
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_report_items_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_report_items_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "sales_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_reports: {
+        Row: {
+          applied_at: string | null
+          audit: Json | null
+          created_at: string | null
+          id: string
+          label: string
+          location_id: string
+          organization_id: string
+          period_end: string | null
+          period_start: string | null
+          status: string
+          total_dishes_sold: number
+          user_id: string | null
+        }
+        Insert: {
+          applied_at?: string | null
+          audit?: Json | null
+          created_at?: string | null
+          id?: string
+          label: string
+          location_id: string
+          organization_id: string
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          total_dishes_sold?: number
+          user_id?: string | null
+        }
+        Update: {
+          applied_at?: string | null
+          audit?: Json | null
+          created_at?: string | null
+          id?: string
+          label?: string
+          location_id?: string
+          organization_id?: string
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          total_dishes_sold?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_reports_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           billing_cycle: string | null
@@ -812,6 +914,7 @@ export type Database = {
         }
         Returns: string
       }
+      apply_sales_report: { Args: { p_report_id: string }; Returns: Json }
       cancel_purchase_order: { Args: { p_po_id: string }; Returns: undefined }
       cancel_transfer: { Args: { p_transfer_id: string }; Returns: undefined }
       create_organization_with_owner: {

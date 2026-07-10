@@ -3,7 +3,6 @@ import {
   ArrowRight,
   Boxes,
   Building2,
-  Check,
   ChefHat,
   ClipboardCheck,
   Download,
@@ -17,6 +16,8 @@ import { getCurrentUser } from "@/lib/auth"
 import { buttonVariants } from "@/components/ui/button"
 import { PricingTable } from "@/components/pricing-table"
 import { NativeAuthGate } from "@/components/native-auth-gate"
+import { Reveal } from "@/components/marketing/reveal"
+import { AnimatedNumber } from "@/components/marketing/animated-number"
 import { cn } from "@/lib/utils"
 
 export default async function LandingPage() {
@@ -40,42 +41,59 @@ export default async function LandingPage() {
 function Hero({ authed }: { authed: boolean }) {
   return (
     <section className="relative overflow-hidden border-b">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(249,115,22,0.12),transparent_70%)]"
-      />
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="hero-glow absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(249,115,22,0.12),transparent_70%)]" />
+        <div className="float-slow absolute left-[8%] top-24 size-40 rounded-full bg-primary/10 blur-3xl" />
+        <div className="float-slower absolute right-[6%] top-44 size-56 rounded-full bg-primary/5 blur-3xl" />
+      </div>
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-20 text-center md:px-6 md:py-28">
-        <div className="rounded-full border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
+        <div className="animate-fade-up flex items-center gap-2 rounded-full border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
+          <span aria-hidden className="relative flex size-2">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-60 motion-safe:animate-[ping_2.5s_cubic-bezier(0,0,0.2,1)_infinite]" />
+            <span className="relative inline-flex size-2 rounded-full bg-primary" />
+          </span>
           Hecho por un restaurantero, no por un programador 🇲🇽
         </div>
-        <h1 className="max-w-3xl text-balance text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+        <h1 className="animate-fade-up max-w-3xl text-balance text-4xl font-bold tracking-tight [animation-delay:100ms] md:text-5xl lg:text-6xl">
           El control de inventario para restaurantes con múltiples sucursales.
         </h1>
-        <p className="max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
+        <p className="animate-fade-up max-w-2xl text-balance text-base text-muted-foreground [animation-delay:200ms] md:text-lg">
           Costos al día, transferencias entre sucursales y compras a proveedores
           en una sola app. Sin Excel, sin adivinar mermas, sin perder dinero
           entre cocinas.
         </p>
         {authed ? (
-          <Link href="/dashboard" className={buttonVariants({ size: "lg" })}>
+          <Link
+            href="/dashboard"
+            className={cn(
+              buttonVariants({ size: "lg" }),
+              "btn-glow animate-fade-up [animation-delay:300ms]"
+            )}
+          >
             Ir al dashboard
             <ArrowRight className="size-4" />
           </Link>
         ) : (
           <>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Link href="/signup" className={buttonVariants({ size: "lg" })}>
+            <div className="animate-fade-up flex flex-col gap-2 [animation-delay:300ms] sm:flex-row">
+              <Link
+                href="/signup"
+                className={cn(buttonVariants({ size: "lg" }), "btn-glow")}
+              >
                 Empezar prueba gratuita
                 <ArrowRight className="size-4" />
               </Link>
               <Link
                 href="/precios"
-                className={buttonVariants({ size: "lg", variant: "outline" })}
+                className={cn(
+                  buttonVariants({ size: "lg", variant: "outline" }),
+                  "transition-colors hover:border-primary/40"
+                )}
               >
                 Ver precios
               </Link>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="animate-fade-up text-xs text-muted-foreground [animation-delay:400ms]">
               14 días gratis · Sin tarjeta · Cancela cuando quieras
             </p>
           </>
@@ -131,7 +149,7 @@ function Features() {
   return (
     <section className="border-b">
       <div className="mx-auto max-w-6xl px-4 py-20 md:px-6">
-        <div className="mx-auto mb-12 max-w-2xl text-center">
+        <Reveal className="mx-auto mb-12 max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
             Todo lo que necesitas para no perder dinero en la cocina
           </h2>
@@ -139,19 +157,18 @@ function Features() {
             Diseñado desde un restaurante real, con los problemas reales de un
             operador multi-sucursal.
           </p>
-        </div>
+        </Reveal>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="flex flex-col gap-3 rounded-xl border bg-card p-5"
-            >
-              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <f.icon className="size-5" />
+          {FEATURES.map((f, i) => (
+            <Reveal key={f.title} delay={(i % 3) * 100}>
+              <div className="group flex h-full flex-col gap-3 rounded-xl border bg-card p-5 transition-all duration-300 hover:border-primary/30 hover:shadow-lg motion-safe:hover:-translate-y-1">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary transition-transform duration-300 motion-safe:group-hover:scale-110">
+                  <f.icon className="size-5" />
+                </div>
+                <h3 className="text-base font-semibold">{f.title}</h3>
+                <p className="text-sm text-muted-foreground">{f.description}</p>
               </div>
-              <h3 className="text-base font-semibold">{f.title}</h3>
-              <p className="text-sm text-muted-foreground">{f.description}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -166,7 +183,10 @@ function CaseStudy() {
   return (
     <section className="border-b bg-muted/20">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 md:grid-cols-[1fr_1.2fr] md:px-6">
-        <div className="flex flex-col justify-center gap-4">
+        <Reveal
+          direction="left"
+          className="flex flex-col justify-center gap-4"
+        >
           <div className="inline-flex w-fit items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium">
             <Sparkles className="size-3 text-primary" />
             Cliente cero
@@ -183,10 +203,15 @@ function CaseStudy() {
           <div className="grid grid-cols-3 gap-4 pt-2">
             <Stat value="3" label="sucursales" />
             <Stat value="100+" label="productos" />
-            <Stat value="2026" label="operando" />
+            <Stat value="2026" label="operando" animate={false} />
           </div>
-        </div>
-        <figure className="flex flex-col justify-center gap-4 rounded-2xl border bg-card p-8 shadow-sm">
+        </Reveal>
+        <Reveal
+          as="figure"
+          direction="right"
+          delay={100}
+          className="flex flex-col justify-center gap-4 rounded-2xl border bg-card p-8 shadow-sm"
+        >
           <ChefHat className="size-8 text-primary" />
           <blockquote className="text-lg italic leading-relaxed">
             &ldquo;Lo construí porque ningún software me servía. MarketMan
@@ -198,16 +223,28 @@ function CaseStudy() {
             <span className="font-medium text-foreground">Luis Mora</span> ·
             Socio de Pancake Factory MX · Fundador de Restoki
           </figcaption>
-        </figure>
+        </Reveal>
       </div>
     </section>
   )
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({
+  value,
+  label,
+  animate = true,
+}: {
+  value: string
+  label: string
+  animate?: boolean
+}) {
   return (
     <div className="flex flex-col">
-      <span className="text-2xl font-bold tabular-nums">{value}</span>
+      <AnimatedNumber
+        value={value}
+        animate={animate}
+        className="text-2xl font-bold tabular-nums"
+      />
       <span className="text-xs text-muted-foreground">{label}</span>
     </div>
   )
@@ -220,7 +257,7 @@ function Pricing({ authed }: { authed: boolean }) {
   return (
     <section id="pricing" className="border-b">
       <div className="mx-auto max-w-6xl px-4 py-20 md:px-6">
-        <div className="mx-auto mb-12 max-w-2xl text-center">
+        <Reveal className="mx-auto mb-12 max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
             Precios honestos. Sin sorpresas.
           </h2>
@@ -228,8 +265,10 @@ function Pricing({ authed }: { authed: boolean }) {
             14 días de prueba en cualquier plan. Sin tarjeta de crédito. Todos
             los precios incluyen IVA.
           </p>
-        </div>
-        <PricingTable authed={authed} />
+        </Reveal>
+        <Reveal delay={100}>
+          <PricingTable authed={authed} />
+        </Reveal>
       </div>
     </section>
   )
@@ -281,7 +320,7 @@ function FAQ() {
   return (
     <section className="border-b">
       <div className="mx-auto max-w-3xl px-4 py-20 md:px-6">
-        <div className="mb-10 text-center">
+        <Reveal className="mb-10 text-center">
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
             Preguntas frecuentes
           </h2>
@@ -295,19 +334,18 @@ function FAQ() {
             </a>
             .
           </p>
-        </div>
+        </Reveal>
         <div className="flex flex-col gap-3">
-          {FAQS.map((item) => (
-            <details
-              key={item.q}
-              className="group rounded-xl border bg-card p-5 [&_summary::-webkit-details-marker]:hidden"
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-medium">
-                {item.q}
-                <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">{item.a}</p>
-            </details>
+          {FAQS.map((item, i) => (
+            <Reveal key={item.q} delay={(i % 4) * 60}>
+              <details className="faq-item group rounded-xl border bg-card p-5 transition-colors duration-300 hover:border-primary/30 [&_summary::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-medium">
+                  {item.q}
+                  <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-300 group-open:rotate-90" />
+                </summary>
+                <p className="mt-3 text-sm text-muted-foreground">{item.a}</p>
+              </details>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -321,7 +359,7 @@ function FAQ() {
 function FinalCTA({ authed }: { authed: boolean }) {
   return (
     <section className="border-b bg-gradient-to-b from-background to-muted/30">
-      <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-4 py-20 text-center md:px-6">
+      <Reveal className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-4 py-20 text-center md:px-6">
         <LineChart className="size-10 text-primary" />
         <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
           Empieza hoy. Tu próximo conteo lo haces sin Excel.
@@ -331,17 +369,23 @@ function FinalCTA({ authed }: { authed: boolean }) {
           ayudamos a exportar tus datos.
         </p>
         {authed ? (
-          <Link href="/dashboard" className={buttonVariants({ size: "lg" })}>
+          <Link
+            href="/dashboard"
+            className={cn(buttonVariants({ size: "lg" }), "btn-glow")}
+          >
             Ir al dashboard
             <ArrowRight className="size-4" />
           </Link>
         ) : (
-          <Link href="/signup" className={buttonVariants({ size: "lg" })}>
+          <Link
+            href="/signup"
+            className={cn(buttonVariants({ size: "lg" }), "btn-glow")}
+          >
             Empezar prueba gratuita
             <ArrowRight className="size-4" />
           </Link>
         )}
-      </div>
+      </Reveal>
     </section>
   )
 }

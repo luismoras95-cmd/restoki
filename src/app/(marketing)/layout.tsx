@@ -3,6 +3,7 @@ import { ChefHat } from "lucide-react"
 
 import { getCurrentUser } from "@/lib/auth"
 import { MarketingNav } from "@/components/marketing-nav"
+import { SiteHeader } from "@/components/marketing/site-header"
 import { WebOnly } from "@/components/web-only"
 
 export default async function MarketingLayout({
@@ -14,7 +15,7 @@ export default async function MarketingLayout({
 
   return (
     <div className="flex min-h-svh flex-col bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
+      <SiteHeader>
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 md:px-6">
           <Link
             href="/"
@@ -25,7 +26,7 @@ export default async function MarketingLayout({
           </Link>
           <MarketingNav authed={!!user} />
         </div>
-      </header>
+      </SiteHeader>
       <main className="flex-1">{children}</main>
       <footer className="border-t bg-background">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 text-sm md:grid-cols-4 md:px-6">
@@ -46,14 +47,14 @@ export default async function MarketingLayout({
             <WebOnly>
               <Link
                 href="/precios"
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground transition-colors hover:text-foreground"
               >
                 Precios
               </Link>
             </WebOnly>
             <Link
               href="/login"
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Iniciar sesión
             </Link>
@@ -64,7 +65,7 @@ export default async function MarketingLayout({
             </h4>
             <a
               href="mailto:hola@restoki.mx"
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
               hola@restoki.mx
             </a>
@@ -78,19 +79,19 @@ export default async function MarketingLayout({
             </h4>
             <Link
               href="/privacidad"
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Privacidad
             </Link>
             <Link
               href="/terminos"
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Términos
             </Link>
             <Link
               href="/aviso-de-privacidad"
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Aviso de Privacidad
             </Link>

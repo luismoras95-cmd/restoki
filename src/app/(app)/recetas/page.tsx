@@ -1,10 +1,10 @@
-import Link from "next/link"
 import { ChefHat } from "lucide-react"
 
 import { getAccessibleLocationIds, requireOrg } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
+import { ImportDishesDialog } from "@/components/dishes/import-dishes-dialog"
 import { NewDishButton } from "@/components/dishes/new-dish-button"
 import { DishesList } from "@/components/dishes/dishes-list"
 import { LocationPicker } from "@/components/dishes/location-picker"
@@ -77,7 +77,10 @@ export default async function RecetasPage({ searchParams }: RecetasPageProps) {
         description="Costo en vivo de tus platillos basado en el CPP actual de los ingredientes."
         action={
           canEdit ? (
-            <NewDishButton categories={categories ?? []} />
+            <div className="flex flex-wrap items-center gap-2">
+              <ImportDishesDialog />
+              <NewDishButton categories={categories ?? []} />
+            </div>
           ) : null
         }
       />

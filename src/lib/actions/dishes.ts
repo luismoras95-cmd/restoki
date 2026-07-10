@@ -240,6 +240,337 @@ export async function addDishIngredient(
   return { status: "success", message: "Ingrediente agregado." }
 }
 
+// ============================================================
+// Importación masiva de recetas desde CSV/Excel
+// ============================================================
+
+export type ImportDishRow = {
+  platillo: string
+  precio_venta: string
+  insumo: string
+  cantidad: string
+}
+
+export type ImportDishesResult = {
+  status: "ok" | "error"
+  createdDishes: number
+  skippedDishes: number
+  missingProducts: { name: string; dishes: string[] }[]
+  errors: { row: number; message: string }[]
+  message: string
+}
+
+/**
+ * Normaliza nombres para hacer match: trim, minúsculas, colapsa espacios y
+ * quita acentos ("Café con leche" === "cafe  con leche").
+ */
+function normalizeName(raw: string): string {
+  return raw
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+}
+
+/** Nombre "bonito" para mostrar: trim + colapsa espacios, conserva acentos. */
+function displayName(raw: string): string {
+  return raw.trim().replace(/\s+/g, " ")
+}
+
+/**
+ * Parsea números del CSV. Acepta "1,5" como decimal (coma decimal) y
+ * "1,200.50" con coma de miles.
+ */
+function parseCsvNumber(raw: string): number {
+  const v = raw.trim()
+  if (v === "") return NaN
+  if (/^\d+,\d+$/.test(v)) return Number(v.replace(",", "."))
+  return Number(v.replace(/,/g, ""))
+}
+
+const IMPORT_ERROR = (message: string): ImportDishesResult => ({
+  status: "error",
+  createdDishes: 0,
+  skippedDishes: 0,
+  missingProducts: [],
+  errors: [],
+  message,
+})
+
+export async function importDishes(
+  rows: ImportDishRow[]
+): Promise<ImportDishesResult> {
+  const { org } = await requireOrg()
+  if (!EDITOR_ROLES.has(org.role)) {
+    return IMPORT_ERROR("Sin permiso para importar recetas.")
+  }
+
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    return IMPORT_ERROR(access.reason ?? "Suscripción inactiva.")
+  }
+
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return IMPORT_ERROR("No se recibieron filas para importar.")
+  }
+  if (rows.length > 1500) {
+    return IMPORT_ERROR(
+      "Máximo 1500 filas por importación. Divide tu archivo."
+    )
+  }
+
+  const supabase = await createClient()
+
+  // Productos de la org (para hacer match de insumos por nombre)
+  const { data: products, error: productsError } = await supabase
+    .from("products")
+    .select("id, name")
+    .eq("organization_id", org.id)
+  if (productsError) {
+    return IMPORT_ERROR(`Error al leer productos: ${productsError.message}`)
+  }
+  const productMap = new Map(
+    (products ?? []).map((p) => [normalizeName(p.name), p.id])
+  )
+
+  // Platillos existentes (para omitir duplicados)
+  const { data: existingDishes, error: dishesError } = await supabase
+    .from("dishes")
+    .select("name")
+    .eq("organization_id", org.id)
+  if (dishesError) {
+    return IMPORT_ERROR(`Error al leer platillos: ${dishesError.message}`)
+  }
+  const existingDishNames = new Set(
+    (existingDishes ?? []).map((d) => normalizeName(d.name))
+  )
+
+  const errors: { row: number; message: string }[] = []
+
+  // Agrupa filas por platillo (nombre normalizado), en orden de aparición.
+  type DishGroup = {
+    firstRow: number
+    name: string
+    salePrice: number | null
+    hasRowErrors: boolean
+    ingredients: { productId: string; quantity: number }[]
+    seenIngredients: Set<string>
+    missingIngredients: Set<string>
+  }
+  const groups = new Map<string, DishGroup>()
+  // Insumos faltantes: nombre normalizado → { nombre bonito, platillos }
+  const missing = new Map<string, { name: string; dishes: Set<string> }>()
+
+  rows.forEach((row, i) => {
+    const rowNum = i + 2 // fila 1 = encabezados; humanos cuentan desde 1
+    const dishName = displayName(row.platillo ?? "")
+    const dishKey = normalizeName(row.platillo ?? "")
+    const ingredientName = displayName(row.insumo ?? "")
+    const ingredientKey = normalizeName(row.insumo ?? "")
+
+    if (!dishName) {
+      errors.push({ row: rowNum, message: "Platillo vacío" })
+      return
+    }
+
+    let group = groups.get(dishKey)
+    if (!group) {
+      group = {
+        firstRow: rowNum,
+        name: dishName,
+        salePrice: null,
+        hasRowErrors: false,
+        ingredients: [],
+        seenIngredients: new Set(),
+        missingIngredients: new Set(),
+      }
+      groups.set(dishKey, group)
+    }
+
+    // Precio de venta: se toma el primero no vacío del platillo.
+    const priceRaw = (row.precio_venta ?? "").trim()
+    if (priceRaw !== "") {
+      const price = parseCsvNumber(priceRaw)
+      if (!Number.isFinite(price) || price < 0) {
+        errors.push({
+          row: rowNum,
+          message: `Precio de venta "${priceRaw}" no válido en "${dishName}"`,
+        })
+        group.hasRowErrors = true
+      } else if (group.salePrice === null) {
+        group.salePrice = price
+      }
+    }
+
+    if (!ingredientName) {
+      errors.push({
+        row: rowNum,
+        message: `Insumo vacío en "${dishName}"`,
+      })
+      group.hasRowErrors = true
+      return
+    }
+
+    if (group.seenIngredients.has(ingredientKey)) {
+      errors.push({
+        row: rowNum,
+        message: `Insumo "${ingredientName}" repetido en "${dishName}"`,
+      })
+      group.hasRowErrors = true
+      return
+    }
+    group.seenIngredients.add(ingredientKey)
+
+    const quantity = parseCsvNumber(row.cantidad ?? "")
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      errors.push({
+        row: rowNum,
+        message: `Cantidad "${(row.cantidad ?? "").trim()}" no válida para "${ingredientName}" (debe ser un número mayor a 0)`,
+      })
+      group.hasRowErrors = true
+      return
+    }
+
+    const productId = productMap.get(ingredientKey)
+    if (!productId) {
+      group.missingIngredients.add(ingredientKey)
+      let entry = missing.get(ingredientKey)
+      if (!entry) {
+        entry = { name: ingredientName, dishes: new Set() }
+        missing.set(ingredientKey, entry)
+      }
+      entry.dishes.add(dishName)
+      return
+    }
+
+    group.ingredients.push({ productId, quantity })
+  })
+
+  // Decide qué platillos se crean
+  let skippedDishes = 0
+  const toCreate: DishGroup[] = []
+
+  for (const [dishKey, group] of groups) {
+    if (existingDishNames.has(dishKey)) {
+      skippedDishes++
+      errors.push({
+        row: group.firstRow,
+        message: `"${group.name}" ya existe, se omite`,
+      })
+      continue
+    }
+    if (group.missingIngredients.size > 0) {
+      // No se crea: tiene insumos no registrados (se reportan aparte).
+      continue
+    }
+    if (group.hasRowErrors) {
+      errors.push({
+        row: group.firstRow,
+        message: `"${group.name}" no se creó: corrige sus filas con error y vuelve a subir`,
+      })
+      continue
+    }
+    if (group.ingredients.length === 0) {
+      errors.push({
+        row: group.firstRow,
+        message: `"${group.name}" no tiene ingredientes válidos, se omite`,
+      })
+      continue
+    }
+    toCreate.push(group)
+  }
+
+  // Inserta platillo por platillo (dish + sus ingredientes).
+  let createdDishes = 0
+  for (const group of toCreate) {
+    const { data: dish, error: dishError } = await supabase
+      .from("dishes")
+      .insert({
+        organization_id: org.id,
+        name: group.name,
+        sale_price: group.salePrice,
+      })
+      .select("id")
+      .single()
+
+    if (dishError || !dish) {
+      errors.push({
+        row: group.firstRow,
+        message: `Error al crear "${group.name}": ${dishError?.message ?? "sin datos"}`,
+      })
+      continue
+    }
+
+    const { error: ingredientsError } = await supabase
+      .from("dish_ingredients")
+      .insert(
+        group.ingredients.map((ing) => ({
+          dish_id: dish.id,
+          product_id: ing.productId,
+          quantity: ing.quantity,
+        }))
+      )
+
+    if (ingredientsError) {
+      // Revertimos el platillo para no dejar recetas a medias.
+      await supabase
+        .from("dishes")
+        .delete()
+        .eq("id", dish.id)
+        .eq("organization_id", org.id)
+      errors.push({
+        row: group.firstRow,
+        message: `Error al guardar ingredientes de "${group.name}": ${ingredientsError.message}`,
+      })
+      continue
+    }
+
+    createdDishes++
+  }
+
+  const missingProducts = Array.from(missing.values())
+    .map((m) => ({ name: m.name, dishes: Array.from(m.dishes) }))
+    .sort((a, b) => a.name.localeCompare(b.name, "es"))
+
+  const dishesWithMissing = new Set(
+    missingProducts.flatMap((m) => m.dishes)
+  ).size
+
+  if (createdDishes > 0) {
+    revalidatePath("/recetas")
+  }
+
+  const parts: string[] = []
+  if (createdDishes > 0) {
+    parts.push(
+      `${createdDishes} ${createdDishes === 1 ? "platillo importado" : "platillos importados"}.`
+    )
+  }
+  if (dishesWithMissing > 0) {
+    parts.push(
+      `${dishesWithMissing} ${dishesWithMissing === 1 ? "platillo" : "platillos"} sin crear por insumos no registrados.`
+    )
+  }
+  if (skippedDishes > 0) {
+    parts.push(
+      `${skippedDishes} ${skippedDishes === 1 ? "ya existía" : "ya existían"}, se ${skippedDishes === 1 ? "omitió" : "omitieron"}.`
+    )
+  }
+  if (parts.length === 0) {
+    parts.push("Ningún platillo importado. Revisa los errores.")
+  }
+
+  return {
+    status: "ok",
+    createdDishes,
+    skippedDishes,
+    missingProducts,
+    errors,
+    message: parts.join(" "),
+  }
+}
+
 export async function updateDishIngredient(
   dishId: string,
   ingredientId: string,

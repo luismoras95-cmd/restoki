@@ -62,9 +62,9 @@ export function PricingTable({
             <div
               key={plan.code}
               className={cn(
-                "relative flex flex-col gap-6 rounded-2xl border bg-card p-6 shadow-sm",
+                "relative flex flex-col gap-6 rounded-2xl border bg-card p-6 shadow-sm transition-all duration-300 hover:border-primary/30 hover:shadow-lg motion-safe:hover:-translate-y-1",
                 isPopular &&
-                  "border-primary/40 shadow-lg ring-1 ring-primary/20"
+                  "border-primary/40 shadow-lg ring-1 ring-primary/20 hover:border-primary/50 hover:shadow-xl"
               )}
             >
               {isPopular && (
@@ -115,7 +115,8 @@ export function PricingTable({
                     size: "lg",
                     variant: isPopular ? "default" : "outline",
                   }),
-                  "w-full"
+                  "w-full",
+                  isPopular && "btn-glow"
                 )}
               >
                 {authed
