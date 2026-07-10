@@ -4,7 +4,9 @@ import { NextResponse, type NextRequest } from "next/server"
 import type { Database } from "@/types/database"
 
 const PUBLIC_PATHS = ["/", "/login", "/signup", "/forgot-password", "/precios"]
-const PUBLIC_PREFIXES = ["/auth/"]
+// Las rutas /api/ manejan su propia autenticación (webhook de Stripe valida
+// firma; keep-alive es de solo lectura). No deben redirigirse al login HTML.
+const PUBLIC_PREFIXES = ["/auth/", "/api/"]
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) return true
