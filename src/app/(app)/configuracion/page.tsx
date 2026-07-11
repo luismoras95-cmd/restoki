@@ -17,7 +17,7 @@ const TEAM_EDITOR_ROLES = new Set(["owner", "admin"])
 const BILLING_MANAGE_ROLES = new Set(["owner", "admin"])
 
 interface ConfigPageProps {
-  searchParams: Promise<{ tab?: string; checkout?: string }>
+  searchParams: Promise<{ tab?: string; checkout?: string; bloqueado?: string }>
 }
 
 export default async function ConfiguracionPage({
@@ -29,8 +29,12 @@ export default async function ConfiguracionPage({
   const canManageTeam = TEAM_EDITOR_ROLES.has(org.role)
   const canManageBilling = BILLING_MANAGE_ROLES.has(org.role)
 
-  const defaultTab =
-    params.tab === "team" || params.tab === "billing" ? params.tab : "org"
+  const isBlocked = params.bloqueado === "1"
+  const defaultTab = isBlocked
+    ? "billing"
+    : params.tab === "team" || params.tab === "billing"
+      ? params.tab
+      : "org"
 
   const supabase = await createClient()
 
@@ -75,6 +79,19 @@ export default async function ConfiguracionPage({
           Datos de tu organización, equipo y suscripción.
         </p>
       </div>
+
+      {isBlocked && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4">
+          <p className="text-sm font-semibold text-destructive">
+            Tu acceso a Restoki está bloqueado
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {canManageBilling
+              ? "Tu prueba o suscripción terminó. Agrega un plan aquí abajo para reactivar el inventario, las compras, las recetas y todas las funciones."
+              : "La suscripción de tu organización terminó. Pídele al dueño o a un administrador que agregue un plan para reactivar el acceso."}
+          </p>
+        </div>
+      )}
 
       {params.checkout === "success" && (
         <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-700 dark:text-emerald-400">

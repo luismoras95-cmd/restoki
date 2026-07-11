@@ -24,6 +24,7 @@ import {
 
 interface AppHeaderProps {
   userEmail: string
+  blocked?: boolean
 }
 
 function initials(email: string): string {
@@ -31,7 +32,7 @@ function initials(email: string): string {
   return local.slice(0, 2).toUpperCase() || "?"
 }
 
-export function AppHeader({ userEmail }: AppHeaderProps) {
+export function AppHeader({ userEmail, blocked = false }: AppHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
@@ -56,7 +57,10 @@ export function AppHeader({ userEmail }: AppHeaderProps) {
               Restoki
             </SheetTitle>
           </SheetHeader>
-          <AppSidebar onNavigate={() => setMobileOpen(false)} />
+          <AppSidebar
+            blocked={blocked}
+            onNavigate={() => setMobileOpen(false)}
+          />
         </SheetContent>
       </Sheet>
 

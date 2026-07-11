@@ -1,3 +1,6 @@
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
+
 import { getSubscriptionAccess, getUserOrgs, requireOrg } from "@/lib/auth"
 import { AppHeader } from "@/components/app-header"
 import { AppSidebar } from "@/components/app-sidebar"
@@ -18,16 +21,24 @@ export default async function AppLayout({
   ])
   const canManageBilling = BILLING_MANAGE_ROLES.has(org.role)
 
+  // Bloqueo por suscripción (paywall): si no hay pago activo, solo se permite
+  // Configuración (para ir a pagar). El resto de la app queda bloqueado.
+  const blocked = !access.canWrite
+  const pathname = (await headers()).get("x-pathname") ?? ""
+  if (blocked && !pathname.startsWith("/configuracion")) {
+    redirect("/configuracion?bloqueado=1")
+  }
+
   return (
     <div className="flex min-h-svh flex-col bg-background">
-      <AppHeader userEmail={user.email ?? ""} />
+      <AppHeader userEmail={user.email ?? ""} blocked={blocked} />
       <TrialBanner access={access} canManageBilling={canManageBilling} />
       <div className="flex flex-1">
         <aside className="hidden w-60 shrink-0 border-r bg-sidebar md:flex md:flex-col">
           <div className="border-b p-3">
             <OrgSwitcher current={org} orgs={orgs} />
           </div>
-          <AppSidebar />
+          <AppSidebar blocked={blocked} />
         </aside>
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>

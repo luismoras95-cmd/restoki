@@ -14,7 +14,15 @@ function isPublic(pathname: string): boolean {
 }
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  // Expone la ruta actual como header para que los layouts server puedan
+  // aplicar el bloqueo por suscripción (paywall) según la página.
+  const nextWithPathname = () => {
+    const headers = new Headers(request.headers)
+    headers.set("x-pathname", request.nextUrl.pathname)
+    return NextResponse.next({ request: { headers } })
+  }
+
+  let supabaseResponse = nextWithPathname()
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,7 +36,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
-          supabaseResponse = NextResponse.next({ request })
+          supabaseResponse = nextWithPathname()
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
