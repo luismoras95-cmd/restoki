@@ -5,7 +5,7 @@ import { NativeAuthGate } from "@/components/native-auth-gate"
 export const metadata = {
   title: "Precios",
   description:
-    "Planes de Restoki: Solo $499/mes, Cadena $899/mes con IA, Enterprise $1,799/mes. 14 días gratis, sin tarjeta.",
+    "Planes de Restoki: Solo $399/mes, Cadena $799/mes con IA, Enterprise $1,799/mes. 14 días gratis, sin tarjeta.",
 }
 
 export default async function PreciosPage() {

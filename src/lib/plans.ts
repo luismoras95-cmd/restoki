@@ -31,8 +31,8 @@ export const PLANS: readonly Plan[] = [
     code: "solo",
     name: "Solo",
     tagline: "Para una sola sucursal o restaurante.",
-    monthly: 499,
-    annual: annualPrice(499),
+    monthly: 399,
+    annual: annualPrice(399),
     perks: [
       "1 sucursal",
       "Hasta 3 usuarios",
@@ -50,8 +50,8 @@ export const PLANS: readonly Plan[] = [
     code: "cadena",
     name: "Cadena",
     tagline: "Para 2-5 sucursales con un equipo grande.",
-    monthly: 899,
-    annual: annualPrice(899),
+    monthly: 799,
+    annual: annualPrice(799),
     perks: [
       "Hasta 5 sucursales",
       "Hasta 10 usuarios con permisos por sucursal",
