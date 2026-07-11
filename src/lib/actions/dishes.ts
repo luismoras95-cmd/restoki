@@ -249,6 +249,44 @@ export type ImportDishRow = {
   precio_venta: string
   insumo: string
   cantidad: string
+  unidad: string
+}
+
+type RecipeUnit = "kg" | "g" | "l" | "ml" | "pieza"
+
+/** Normaliza la unidad de la plantilla a su forma canónica. */
+function normalizeRecipeUnit(raw: string): RecipeUnit | null {
+  const u = raw
+    .trim()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+  const aliases: Record<string, RecipeUnit> = {
+    kg: "kg", kgs: "kg", kilo: "kg", kilos: "kg", kilogramo: "kg", kilogramos: "kg",
+    g: "g", gr: "g", grs: "g", gramo: "g", gramos: "g",
+    l: "l", lt: "l", lts: "l", litro: "l", litros: "l",
+    ml: "ml", mls: "ml", mililitro: "ml", mililitros: "ml",
+    pieza: "pieza", piezas: "pieza", pz: "pieza", pza: "pieza", pzas: "pieza",
+    unidad: "pieza", unidades: "pieza", u: "pieza",
+  }
+  return aliases[u] ?? null
+}
+
+/**
+ * Convierte una cantidad de la unidad ingresada a la unidad base del producto.
+ * Devuelve null si son incompatibles (masa vs volumen vs pieza).
+ */
+function convertToBaseUnit(
+  qty: number,
+  from: RecipeUnit,
+  base: string
+): number | null {
+  if (from === base) return qty
+  if (from === "g" && base === "kg") return qty / 1000
+  if (from === "kg" && base === "g") return qty * 1000
+  if (from === "ml" && base === "l") return qty / 1000
+  if (from === "l" && base === "ml") return qty * 1000
+  return null
 }
 
 export type ImportDishesResult = {
@@ -325,13 +363,16 @@ export async function importDishes(
   // Productos de la org (para hacer match de insumos por nombre)
   const { data: products, error: productsError } = await supabase
     .from("products")
-    .select("id, name")
+    .select("id, name, base_unit")
     .eq("organization_id", org.id)
   if (productsError) {
     return IMPORT_ERROR(`Error al leer productos: ${productsError.message}`)
   }
   const productMap = new Map(
-    (products ?? []).map((p) => [normalizeName(p.name), p.id])
+    (products ?? []).map((p) => [
+      normalizeName(p.name),
+      { id: p.id, baseUnit: p.base_unit },
+    ])
   )
 
   // Platillos existentes (para omitir duplicados)
@@ -432,8 +473,8 @@ export async function importDishes(
       return
     }
 
-    const productId = productMap.get(ingredientKey)
-    if (!productId) {
+    const product = productMap.get(ingredientKey)
+    if (!product) {
       group.missingIngredients.add(ingredientKey)
       let entry = missing.get(ingredientKey)
       if (!entry) {
@@ -444,7 +485,33 @@ export async function importDishes(
       return
     }
 
-    group.ingredients.push({ productId, quantity })
+    // Convierte la cantidad a la unidad base del producto según "unidad".
+    // Si la columna viene vacía, se asume que ya está en la unidad base.
+    let quantityInBase = quantity
+    const rawUnit = (row.unidad ?? "").trim()
+    if (rawUnit !== "") {
+      const fromUnit = normalizeRecipeUnit(rawUnit)
+      if (!fromUnit) {
+        errors.push({
+          row: rowNum,
+          message: `Unidad "${rawUnit}" no válida para "${ingredientName}" (usa g, kg, ml, l o pieza)`,
+        })
+        group.hasRowErrors = true
+        return
+      }
+      const converted = convertToBaseUnit(quantity, fromUnit, product.baseUnit)
+      if (converted === null) {
+        errors.push({
+          row: rowNum,
+          message: `La unidad "${rawUnit}" no es compatible con "${ingredientName}" (se mide en ${product.baseUnit}).`,
+        })
+        group.hasRowErrors = true
+        return
+      }
+      quantityInBase = converted
+    }
+
+    group.ingredients.push({ productId: product.id, quantity: quantityInBase })
   })
 
   // Decide qué platillos se crean

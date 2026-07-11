@@ -34,13 +34,14 @@ const TEMPLATE_HEADERS = [
   "precio_venta",
   "insumo",
   "cantidad",
+  "unidad",
 ] as const
 
 const TEMPLATE_EXAMPLE_ROWS = [
-  ["Hotcakes clásicos", "95", "Harina de trigo", "0.12"],
-  ["Hotcakes clásicos", "", "Huevo", "2"],
-  ["Hotcakes clásicos", "", "Leche entera", "0.15"],
-  ["Hotcakes clásicos", "", "Mantequilla", "20"],
+  ["Hotcakes clásicos", "95", "Harina de trigo", "120", "g"],
+  ["Hotcakes clásicos", "", "Huevo", "2", "pieza"],
+  ["Hotcakes clásicos", "", "Leche entera", "150", "ml"],
+  ["Hotcakes clásicos", "", "Mantequilla", "20", "g"],
 ]
 
 function downloadTemplate() {
@@ -126,6 +127,7 @@ function rowsToDishRows(parsed: string[][]): ImportDishRow[] {
   const iPrecio = idx("precio_venta")
   const iInsumo = idx("insumo")
   const iCantidad = idx("cantidad")
+  const iUnidad = idx("unidad")
 
   const str = (r: string[], i: number): string =>
     i >= 0 ? (r[i] ?? "").trim() : ""
@@ -135,6 +137,7 @@ function rowsToDishRows(parsed: string[][]): ImportDishRow[] {
     precio_venta: str(r, iPrecio),
     insumo: str(r, iInsumo),
     cantidad: str(r, iCantidad),
+    unidad: str(r, iUnidad),
   }))
 }
 
@@ -224,10 +227,12 @@ export function ImportDishesDialog() {
             <p className="text-xs text-muted-foreground">
               Columnas: <strong>platillo</strong>, <strong>precio_venta</strong>{" "}
               (opcional, solo en la primera fila del platillo),{" "}
-              <strong>insumo</strong> y <strong>cantidad</strong>. La{" "}
-              <strong>cantidad</strong> va en la unidad base del insumo tal como
-              está en Productos (kg, l, pieza…). Los insumos deben existir en
-              Productos con el mismo nombre.
+              <strong>insumo</strong>, <strong>cantidad</strong> y{" "}
+              <strong>unidad</strong>. En <strong>unidad</strong> escribe{" "}
+              <strong>g</strong>, <strong>kg</strong>, <strong>ml</strong>,{" "}
+              <strong>l</strong> o <strong>pieza</strong> — Restoki convierte solo
+              a la unidad del producto (ej. 20 g → 0.02 kg). Los insumos deben
+              existir en Productos con el mismo nombre.
             </p>
             <Button
               type="button"

@@ -25,13 +25,29 @@ export default async function AppLayout({
   // Configuración (para ir a pagar). El resto de la app queda bloqueado.
   const blocked = !access.canWrite
   const pathname = (await headers()).get("x-pathname") ?? ""
-  if (blocked && !pathname.startsWith("/configuracion")) {
+  // Sin pago se bloquea todo, salvo Configuración (para pagar) y Mi perfil
+  // (para que cualquiera pueda cambiar su contraseña / datos).
+  if (
+    blocked &&
+    !pathname.startsWith("/configuracion") &&
+    !pathname.startsWith("/perfil")
+  ) {
     redirect("/configuracion?bloqueado=1")
+  }
+
+  const meta = (user.user_metadata ?? {}) as {
+    full_name?: string | null
+    avatar_url?: string | null
   }
 
   return (
     <div className="flex min-h-svh flex-col bg-background">
-      <AppHeader userEmail={user.email ?? ""} blocked={blocked} />
+      <AppHeader
+        userEmail={user.email ?? ""}
+        userName={meta.full_name}
+        avatarUrl={meta.avatar_url}
+        blocked={blocked}
+      />
       <TrialBanner access={access} canManageBilling={canManageBilling} />
       <div className="flex flex-1">
         <aside className="hidden w-60 shrink-0 border-r bg-sidebar md:flex md:flex-col">

@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Sheet,
   SheetContent,
@@ -24,15 +24,24 @@ import {
 
 interface AppHeaderProps {
   userEmail: string
+  userName?: string | null
+  avatarUrl?: string | null
   blocked?: boolean
 }
 
-function initials(email: string): string {
-  const local = email.split("@")[0] ?? ""
-  return local.slice(0, 2).toUpperCase() || "?"
+function initials(name: string, email: string): string {
+  const source = (name ?? "").trim() || email.split("@")[0] || "?"
+  const parts = source.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0]![0]! + parts[1]![0]!).toUpperCase()
+  return source.slice(0, 2).toUpperCase() || "?"
 }
 
-export function AppHeader({ userEmail, blocked = false }: AppHeaderProps) {
+export function AppHeader({
+  userEmail,
+  userName,
+  avatarUrl,
+  blocked = false,
+}: AppHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
@@ -85,11 +94,17 @@ export function AppHeader({ userEmail, blocked = false }: AppHeaderProps) {
             }
           >
             <Avatar className="size-8">
-              <AvatarFallback>{initials(userEmail)}</AvatarFallback>
+              {avatarUrl ? (
+                <AvatarImage src={avatarUrl} alt="Foto de perfil" />
+              ) : null}
+              <AvatarFallback>{initials(userName ?? "", userEmail)}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
             <div className="flex flex-col gap-0.5 px-1.5 py-1">
+              {userName ? (
+                <span className="truncate text-sm font-medium">{userName}</span>
+              ) : null}
               <span className="text-xs font-normal text-muted-foreground">
                 Conectado como
               </span>
@@ -97,11 +112,11 @@ export function AppHeader({ userEmail, blocked = false }: AppHeaderProps) {
             </div>
             <DropdownMenuSeparator />
             <Link
-              href="/configuracion"
+              href="/perfil"
               className="relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground [&_svg]:size-4"
             >
               <UserIcon />
-              Configuración
+              Mi perfil
             </Link>
             <DropdownMenuSeparator />
             <form action={signOut} className="px-0">
