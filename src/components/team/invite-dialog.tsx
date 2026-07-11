@@ -150,8 +150,8 @@ export function InviteDialog({
           </DialogTitle>
           <DialogDescription>
             {created
-              ? "Comparte estas credenciales con tu colaborador. Esta contraseña no se volverá a mostrar."
-              : "Le crearemos una cuenta con una contraseña temporal que verás en pantalla para que se la compartas. No depende de correos."}
+              ? "Le enviamos un correo para que cree su propia contraseña. Si no le llega, compártele estas credenciales temporales como respaldo."
+              : "Le crearemos una cuenta y le enviaremos un correo para que ponga su contraseña. También verás una contraseña temporal de respaldo por si el correo no le llega."}
           </DialogDescription>
         </DialogHeader>
 
@@ -162,9 +162,10 @@ export function InviteDialog({
               <CopyField label="Contraseña temporal" value={created.tempPassword} />
             </div>
             <p className="text-sm text-muted-foreground">
-              Tu colaborador podrá iniciar sesión con su correo y esta
-              contraseña, y cambiarla después. Esta contraseña no se volverá a
-              mostrar, así que cópiala ahora.
+              Le llegará un correo con un enlace para crear su propia contraseña
+              (que revise spam). Si no le llega, puede iniciar sesión con estas
+              credenciales temporales y cambiarla después. No se volverán a
+              mostrar, así que cópialas ahora.
             </p>
             <div className="flex justify-end pt-2">
               <Button

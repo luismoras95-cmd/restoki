@@ -151,6 +151,22 @@ export async function inviteMember(
     }
   }
 
+  // Correo de invitación: le mandamos al colaborador un enlace para que cree
+  // su propia contraseña (reusa la plantilla de recuperación en español, ya
+  // con Resend + DMARC). Si el correo falla, NO rompemos el alta: el dueño
+  // tiene la contraseña temporal como respaldo para compartírsela a mano.
+  try {
+    const headersList = await headers()
+    const origin =
+      headersList.get("origin") ??
+      `https://${headersList.get("host") ?? "restoki.mx"}`
+    await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+      redirectTo: `${origin}/auth/callback?next=/reset-password`,
+    })
+  } catch {
+    // Ignorado a propósito: la cuenta ya quedó creada.
+  }
+
   revalidatePath("/configuracion")
   return {
     status: "created",
