@@ -42,15 +42,22 @@ export function TransferActions({
 
   if (!canEdit) return null
 
-  function run(fn: () => Promise<void>, msg: string) {
+  function run(
+    fn: () => Promise<{ ok: boolean; message?: string }>,
+    msg: string
+  ) {
     startTransition(async () => {
       try {
-        await fn()
+        const res = await fn()
+        if (!res.ok) {
+          toast.error(res.message ?? "No se pudo completar la acción.")
+          return
+        }
         toast.success(msg)
         setConfirm(null)
         router.refresh()
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Error")
+        toast.error(e instanceof Error ? e.message : "Error inesperado.")
       }
     })
   }

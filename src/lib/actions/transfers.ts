@@ -193,54 +193,62 @@ export async function removeTransferItem(transferId: string, itemId: string) {
   revalidatePath(`/transferencias/${transferId}`)
 }
 
-export async function shipTransfer(transferId: string) {
+// Devuelven un resultado (no lanzan) para que el mensaje real del RPC llegue
+// al cliente. En producción, los errores LANZADOS se censuran ("sensitive
+// details omitted"); los valores DEVUELTOS no.
+export type TransferResult = { ok: boolean; message?: string }
+
+export async function shipTransfer(
+  transferId: string
+): Promise<TransferResult> {
   const { org } = await requireOrg()
-  if (!EDITOR_ROLES.has(org.role)) throw new Error("Sin permiso.")
+  if (!EDITOR_ROLES.has(org.role)) return { ok: false, message: "Sin permiso." }
 
   const supabase = await createClient()
   const { error } = await supabase.rpc("ship_transfer", {
     p_transfer_id: transferId,
   })
-
-  if (error) throw new Error(error.message)
+  if (error) return { ok: false, message: error.message }
 
   revalidatePath(`/transferencias/${transferId}`)
   revalidatePath("/transferencias")
   revalidatePath("/inventario")
   revalidatePath("/dashboard")
-  void org
+  return { ok: true }
 }
 
-export async function receiveTransfer(transferId: string) {
+export async function receiveTransfer(
+  transferId: string
+): Promise<TransferResult> {
   const { org } = await requireOrg()
-  if (!EDITOR_ROLES.has(org.role)) throw new Error("Sin permiso.")
+  if (!EDITOR_ROLES.has(org.role)) return { ok: false, message: "Sin permiso." }
 
   const supabase = await createClient()
   const { error } = await supabase.rpc("receive_transfer", {
     p_transfer_id: transferId,
   })
-
-  if (error) throw new Error(error.message)
+  if (error) return { ok: false, message: error.message }
 
   revalidatePath(`/transferencias/${transferId}`)
   revalidatePath("/transferencias")
   revalidatePath("/inventario")
   revalidatePath("/dashboard")
-  void org
+  return { ok: true }
 }
 
-export async function cancelTransfer(transferId: string) {
+export async function cancelTransfer(
+  transferId: string
+): Promise<TransferResult> {
   const { org } = await requireOrg()
-  if (!EDITOR_ROLES.has(org.role)) throw new Error("Sin permiso.")
+  if (!EDITOR_ROLES.has(org.role)) return { ok: false, message: "Sin permiso." }
 
   const supabase = await createClient()
   const { error } = await supabase.rpc("cancel_transfer", {
     p_transfer_id: transferId,
   })
-
-  if (error) throw new Error(error.message)
+  if (error) return { ok: false, message: error.message }
 
   revalidatePath(`/transferencias/${transferId}`)
   revalidatePath("/transferencias")
-  void org
+  return { ok: true }
 }
