@@ -70,8 +70,29 @@ function escapeCsv(value: string): string {
   return value
 }
 
-// Parser CSV simple que respeta comillas dobles.
+// Detecta el separador real de la primera línea: coma, punto y coma o
+// tabulador. Excel en español (México) suele exportar CSV con ";".
+function detectDelimiter(text: string): string {
+  const firstLine = text.replace(/^﻿/, "").split(/\r?\n/)[0] ?? ""
+  const counts: [string, number][] = [
+    [",", (firstLine.match(/,/g) ?? []).length],
+    [";", (firstLine.match(/;/g) ?? []).length],
+    ["\t", (firstLine.match(/\t/g) ?? []).length],
+  ]
+  let best = ","
+  let max = 0
+  for (const [d, n] of counts) {
+    if (n > max) {
+      max = n
+      best = d
+    }
+  }
+  return best
+}
+
+// Parser CSV simple que respeta comillas dobles. Autodetecta el separador.
 function parseCsv(text: string): string[][] {
+  const delimiter = detectDelimiter(text)
   const rows: string[][] = []
   let row: string[] = []
   let field = ""
@@ -95,7 +116,7 @@ function parseCsv(text: string): string[][] {
     } else {
       if (char === '"') {
         inQuotes = true
-      } else if (char === ",") {
+      } else if (char === delimiter) {
         row.push(field)
         field = ""
       } else if (char === "\n") {

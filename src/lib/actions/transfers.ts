@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 import { z } from "zod"
 
 import { createClient } from "@/lib/supabase/server"
-import { requireOrg } from "@/lib/auth"
+import { getSubscriptionAccess, requireOrg } from "@/lib/auth"
 
 const HeaderSchema = z.object({
   from_location_id: z.string().uuid("Selecciona la sucursal origen"),
@@ -25,6 +25,17 @@ export type TransferActionState =
 
 const EDITOR_ROLES = new Set(["owner", "admin", "manager"])
 
+/** Candado de pago para acciones que LANZAN (formularios con redirect). */
+async function assertCanWrite(): Promise<void> {
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    throw new Error(
+      access.reason ??
+        "Tu suscripción no permite esta acción. Ve a Configuración → Billing."
+    )
+  }
+}
+
 function num(v: FormDataEntryValue | null): number {
   if (v === null || v === "") return NaN
   const n = Number(v)
@@ -36,6 +47,7 @@ export async function createDraftTransfer(formData: FormData) {
   if (!EDITOR_ROLES.has(org.role)) {
     throw new Error("Sin permiso para crear transferencias.")
   }
+  await assertCanWrite()
 
   const parsed = HeaderSchema.safeParse({
     from_location_id: formData.get("from_location_id"),
@@ -204,6 +216,11 @@ export async function shipTransfer(
   const { org } = await requireOrg()
   if (!EDITOR_ROLES.has(org.role)) return { ok: false, message: "Sin permiso." }
 
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    return { ok: false, message: access.reason ?? "Suscripción inactiva." }
+  }
+
   const supabase = await createClient()
   const { error } = await supabase.rpc("ship_transfer", {
     p_transfer_id: transferId,
@@ -223,6 +240,11 @@ export async function receiveTransfer(
   const { org } = await requireOrg()
   if (!EDITOR_ROLES.has(org.role)) return { ok: false, message: "Sin permiso." }
 
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    return { ok: false, message: access.reason ?? "Suscripción inactiva." }
+  }
+
   const supabase = await createClient()
   const { error } = await supabase.rpc("receive_transfer", {
     p_transfer_id: transferId,
@@ -241,6 +263,11 @@ export async function cancelTransfer(
 ): Promise<TransferResult> {
   const { org } = await requireOrg()
   if (!EDITOR_ROLES.has(org.role)) return { ok: false, message: "Sin permiso." }
+
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    return { ok: false, message: access.reason ?? "Suscripción inactiva." }
+  }
 
   const supabase = await createClient()
   const { error } = await supabase.rpc("cancel_transfer", {

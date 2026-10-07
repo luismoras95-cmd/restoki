@@ -1,6 +1,12 @@
 function escape(value: unknown): string {
   if (value === null || value === undefined) return ""
-  const str = String(value)
+  let str = String(value)
+  // Anti-inyección de fórmulas (CSV injection): si el valor empieza con un
+  // carácter que Excel/Sheets interpreta como fórmula (= + - @ tab CR), le
+  // anteponemos una comilla simple para que se muestre como texto literal.
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`
+  }
   if (
     str.includes(",") ||
     str.includes('"') ||

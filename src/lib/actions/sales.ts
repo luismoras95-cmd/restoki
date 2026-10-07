@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { createClient } from "@/lib/supabase/server"
-import { requireOrg } from "@/lib/auth"
+import { getSubscriptionAccess, requireOrg } from "@/lib/auth"
 
 // ============================================================
 // Tipos compartidos con los componentes de /ventas
@@ -234,6 +234,11 @@ export async function applySalesReport(
   input: ApplySalesInput
 ): Promise<ApplySalesResult> {
   const { org, user } = await requireOrg()
+
+  const access = await getSubscriptionAccess()
+  if (!access.canWrite) {
+    return { status: "error", message: access.reason ?? "Suscripción inactiva." }
+  }
 
   const parsed = ApplySchema.safeParse(input)
   if (!parsed.success) {
