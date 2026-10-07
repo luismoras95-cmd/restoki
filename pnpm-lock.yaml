@@ -15,29 +15,29 @@ importers:
         specifier: ^1.4.1
         version: 1.4.1(@types/react@19.2.14)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@capacitor/android':
-        specifier: ^8.3.4
-        version: 8.3.4(@capacitor/core@8.3.4)
+        specifier: ^8.5.2
+        version: 8.5.2(@capacitor/core@8.5.2)
       '@capacitor/app':
-        specifier: ^8.1.0
-        version: 8.1.0(@capacitor/core@8.3.4)
+        specifier: ^8.1.2
+        version: 8.1.2(@capacitor/core@8.5.2)
       '@capacitor/camera':
-        specifier: ^8.2.0
-        version: 8.2.0(@capacitor/core@8.3.4)
+        specifier: ^8.2.5
+        version: 8.2.5(@capacitor/core@8.5.2)
       '@capacitor/core':
-        specifier: ^8.3.4
-        version: 8.3.4
+        specifier: ^8.5.2
+        version: 8.5.2
       '@capacitor/ios':
-        specifier: ^8.3.4
-        version: 8.3.4(@capacitor/core@8.3.4)
+        specifier: ^8.5.2
+        version: 8.5.2(@capacitor/core@8.5.2)
       '@capacitor/preferences':
         specifier: ^8.0.1
-        version: 8.0.1(@capacitor/core@8.3.4)
+        version: 8.0.1(@capacitor/core@8.5.2)
       '@capacitor/splash-screen':
-        specifier: ^8.0.1
-        version: 8.0.1(@capacitor/core@8.3.4)
-      '@capacitor/status-bar':
         specifier: ^8.0.2
-        version: 8.0.2(@capacitor/core@8.3.4)
+        version: 8.0.2(@capacitor/core@8.5.2)
+      '@capacitor/status-bar':
+        specifier: ^8.0.4
+        version: 8.0.4(@capacitor/core@8.5.2)
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.75.0(react@19.1.0))
@@ -100,8 +100,8 @@ importers:
         specifier: ^3.0.5
         version: 3.0.5(@types/node@20.19.40)(typescript@5.9.3)
       '@capacitor/cli':
-        specifier: ^8.3.4
-        version: 8.3.4
+        specifier: ^8.5.2
+        version: 8.5.2
       '@eslint/eslintrc':
         specifier: ^3
         version: 3.3.5
@@ -311,13 +311,13 @@ packages:
       '@types/react':
         optional: true
 
-  '@capacitor/android@8.3.4':
-    resolution: {integrity: sha512-7gJjrG3X32Am1QMLqgMztWTYMLMVNE+VZwhekNxhvYizH4mOV05vH+rC9B+f17bCkYZfyu/qXQX6hoY7kLeVZw==}
+  '@capacitor/android@8.5.2':
+    resolution: {integrity: sha512-rtiaz78egCcS+vs29wkWCL3C+RhazKMSygXcjutwWP8NmO6r5UBxOvGf3Wjz5+ahobyQ723tn9gCePwRwcNDZQ==}
     peerDependencies:
-      '@capacitor/core': ^8.3.0
+      '@capacitor/core': ^8.5.0
 
-  '@capacitor/app@8.1.0':
-    resolution: {integrity: sha512-MlmttTOWHDedr/G4SrhNRxsXMqY+R75S4MM4eIgzsgCzOYhb/MpCkA5Q3nuOCfL1oHm26xjUzqZ5aupbOwdfYg==}
+  '@capacitor/app@8.1.2':
+    resolution: {integrity: sha512-uKBlsrXH0IdvUn69e/KKYbZ32A06pcrUdG8LWuZ/6y33YMXZXLEEdNSwl+jKS/SrsTWqnePs8EqSWaiQM3mUGA==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -326,8 +326,8 @@ packages:
     engines: {node: '>=10.3.0'}
     hasBin: true
 
-  '@capacitor/camera@8.2.0':
-    resolution: {integrity: sha512-hYfrT6xpL936qoEkIpJzSnb0fQCaTkOux1cXzGBfH8QLOGqr6gSLiWZlZz/fqMPmMKJMNRBqlTQkj5fuMhVZog==}
+  '@capacitor/camera@8.2.5':
+    resolution: {integrity: sha512-FPuwY7byjTlBjeUKm17eTjLCPhuqBPJqTF4N3JCQuymLn2FUgfu0SMSN6OUQvCiiz/EVJVyZ9Mmg5GEmDfFoIA==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -336,31 +336,31 @@ packages:
     engines: {node: '>=16.0.0'}
     hasBin: true
 
-  '@capacitor/cli@8.3.4':
-    resolution: {integrity: sha512-QEmyNdiDDVNYl0Mahm7YTVA/3t2tKcy7FWYDapeKGavS6HDNHZSjyTVwQpUXQbDZrrs/PS2Wau3Aii+LIFwm/A==}
+  '@capacitor/cli@8.5.2':
+    resolution: {integrity: sha512-O2kpA5ZPJUAmliDCcmpMf8xnJwMezxlFPUrlyOAjbL3U9MFNY3l4ZpPI/UXwvyPmR8ETcVF9pFr+VdWq61rqTQ==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@capacitor/core@8.3.4':
-    resolution: {integrity: sha512-CqRQCkb6HXxcx/N7s+hHTN6ef2CmamFiRMITwm4qB840ph56mS42bzUgn6tKCP+RZjdDweiRHj9ytDDeN6jFag==}
+  '@capacitor/core@8.5.2':
+    resolution: {integrity: sha512-agnQbGdhGw/KZFuLf7H9SY2o+oE7upkr/WPQsYaokXP6f9chaE8iVmbKkfN6SVl4w3pmz7oZ3Ur1hbkmy1hx+w==}
 
-  '@capacitor/ios@8.3.4':
-    resolution: {integrity: sha512-XvvnPFWWP/gwwO811ue7nEBKSZqDCIB8hxGgWV6iXA7DSVLqMOEmQdfHj94kkVxof2wL9XWHypu3ayDULo7U5w==}
+  '@capacitor/ios@8.5.2':
+    resolution: {integrity: sha512-eOT2S67AfTFG7KN0T3oxwAajrJz4rSye+ODfvChiwrk0F/+kWufFM1qU6cDjGJUOfwdAoeuEpZyWHSwZlu4GFg==}
     peerDependencies:
-      '@capacitor/core': ^8.3.0
+      '@capacitor/core': ^8.5.0
 
   '@capacitor/preferences@8.0.1':
     resolution: {integrity: sha512-T6no3ebi79XJCk91U3Jp/liJUwgBdvHR+s6vhvPkPxSuch7z3zx5Rv1bdWM6sWruNx+pViuEGqZvbfCdyBvcHQ==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@capacitor/splash-screen@8.0.1':
-    resolution: {integrity: sha512-c/ew/Z3eA7z8l06WoRAtzVF16VwYYrExmHmfGq1Cg675pVzaC/yuucB8/1xG1vhEfnW4fZ1KhSf/kzR1RiVYgg==}
+  '@capacitor/splash-screen@8.0.2':
+    resolution: {integrity: sha512-0C6rYScr13WfAE9nPl4ScOQynmjFv9NT3Th+RZkD4ezYHmER6mcl1/lDYsv7jg3Rj3FOvLrlTlmNkUrr83kZzQ==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@capacitor/status-bar@8.0.2':
-    resolution: {integrity: sha512-WXs8YB8B9eEaPZz+bcdY6t2nForF1FLoj/JU0Dl9RRgQnddnS98FEEyDooQhaY7wivr000j4+SC1FyeJkrFO7A==}
+  '@capacitor/status-bar@8.0.4':
+    resolution: {integrity: sha512-ZMzBUyHBzwDUxcHadEhvOvmoPmMQGMZgaMRJu8ohELeI6IaxoVH9ZhdF/OHnY3/yykv3Glev8Tnbh4aZY/0B0w==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -4651,13 +4651,13 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
-  '@capacitor/android@8.3.4(@capacitor/core@8.3.4)':
+  '@capacitor/android@8.5.2(@capacitor/core@8.5.2)':
     dependencies:
-      '@capacitor/core': 8.3.4
+      '@capacitor/core': 8.5.2
 
-  '@capacitor/app@8.1.0(@capacitor/core@8.3.4)':
+  '@capacitor/app@8.1.2(@capacitor/core@8.5.2)':
     dependencies:
-      '@capacitor/core': 8.3.4
+      '@capacitor/core': 8.5.2
 
   '@capacitor/assets@3.0.5(@types/node@20.19.40)(typescript@5.9.3)':
     dependencies:
@@ -4684,9 +4684,9 @@ snapshots:
       - supports-color
       - typescript
 
-  '@capacitor/camera@8.2.0(@capacitor/core@8.3.4)':
+  '@capacitor/camera@8.2.5(@capacitor/core@8.5.2)':
     dependencies:
-      '@capacitor/core': 8.3.4
+      '@capacitor/core': 8.5.2
 
   '@capacitor/cli@5.7.8':
     dependencies:
@@ -4710,7 +4710,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@capacitor/cli@8.3.4':
+  '@capacitor/cli@8.5.2':
     dependencies:
       '@ionic/cli-framework-output': 2.2.8
       '@ionic/utils-subprocess': 3.0.1
@@ -4728,29 +4728,30 @@ snapshots:
       semver: 7.8.0
       tar: 7.5.15
       tslib: 2.8.1
+      xcode: 3.0.1
       xml2js: 0.6.2
     transitivePeerDependencies:
       - supports-color
 
-  '@capacitor/core@8.3.4':
+  '@capacitor/core@8.5.2':
     dependencies:
       tslib: 2.8.1
 
-  '@capacitor/ios@8.3.4(@capacitor/core@8.3.4)':
+  '@capacitor/ios@8.5.2(@capacitor/core@8.5.2)':
     dependencies:
-      '@capacitor/core': 8.3.4
+      '@capacitor/core': 8.5.2
 
-  '@capacitor/preferences@8.0.1(@capacitor/core@8.3.4)':
+  '@capacitor/preferences@8.0.1(@capacitor/core@8.5.2)':
     dependencies:
-      '@capacitor/core': 8.3.4
+      '@capacitor/core': 8.5.2
 
-  '@capacitor/splash-screen@8.0.1(@capacitor/core@8.3.4)':
+  '@capacitor/splash-screen@8.0.2(@capacitor/core@8.5.2)':
     dependencies:
-      '@capacitor/core': 8.3.4
+      '@capacitor/core': 8.5.2
 
-  '@capacitor/status-bar@8.0.2(@capacitor/core@8.3.4)':
+  '@capacitor/status-bar@8.0.4(@capacitor/core@8.5.2)':
     dependencies:
-      '@capacitor/core': 8.3.4
+      '@capacitor/core': 8.5.2
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
